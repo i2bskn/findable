@@ -1,5 +1,3 @@
+require "findable/configuration"
 require "findable/version"
 
-module Findable
-  # Your code goes here...
-end
