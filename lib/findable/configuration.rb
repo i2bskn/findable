@@ -1,7 +1,6 @@
 module Findable
   class Configuration
     VALID_OPTIONS = [
-      :default_storage,
       :redis_options,
     ].freeze
 
@@ -25,7 +24,6 @@ module Findable
     end
 
     def reset
-      self.default_storage = :redis
       self.redis_options = nil
     end
 
