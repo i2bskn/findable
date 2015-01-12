@@ -92,6 +92,7 @@ module Findable
       def delete_all
         redis.del(data_key)
       end
+      alias_method :destroy_all, :delete_all
 
       def transaction(&block)
         redis.multi &block
@@ -109,6 +110,10 @@ module Findable
       def insert(record)
         record.id ||= auto_incremented_id
         redis.hset(data_key, record.id, record.to_json)
+      end
+
+      def delete(id)
+        redis.hdel(data_key, id)
       end
 
       private

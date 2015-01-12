@@ -4,7 +4,7 @@ module Findable
 
     module ClassMethods
       def info_key
-        namepace[:info]
+        namespace[:info]
       end
 
       def data_key

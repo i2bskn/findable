@@ -53,6 +53,11 @@ module Findable
     end
     alias_method :save!, :save
 
+    def delete
+      self.class.delete(id)
+    end
+    alias_method :destroy, :delete
+
     def new_record?
       id ? !self.class.exists?(self) : true
     end
