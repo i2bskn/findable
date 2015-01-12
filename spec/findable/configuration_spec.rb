@@ -1,8 +1,8 @@
 require "spec_helper"
 
 describe Findable::Configuration do
-  let(:storage) { :memory }
   let(:redis) { {host: "localhost", port: 6379, db: 15} }
+  let(:seeds) { "/path/to/seeds.rb" }
 
   describe "#initialize" do
     subject { Findable.config  }
@@ -13,21 +13,21 @@ describe Findable::Configuration do
     end
 
     # default settings
-    it { is_expected.to have_attributes(default_storage: :redis) }
     it { is_expected.to have_attributes(redis_options: nil) }
+    it { is_expected.to have_attributes(seed_file: nil) }
   end
 
   describe "#merge" do
-    subject { Findable.config.merge(default_storage: storage) }
+    subject { Findable.config.merge(seed_file: seeds) }
 
-    it { is_expected.to have_attributes(default_storage: storage) }
+    it { is_expected.to have_attributes(seed_file: seeds) }
     it { is_expected.to be_kind_of(Findable::Configuration) }
   end
 
   describe "#merge!" do
-    subject { Findable.config.merge!(default_storage: storage) }
+    subject { Findable.config.merge!(seed_file: seeds) }
 
-    it { is_expected.to have_attributes(default_storage: storage) }
+    it { is_expected.to have_attributes(seed_file: seeds) }
     it { is_expected.to be_kind_of(Findable::Configuration) }
   end
 
@@ -42,14 +42,14 @@ describe Findable::Configuration do
     describe "#configure" do
       before do
         Findable.configure do |config|
-          config.default_storage = storage
           config.redis_options = redis
+          config.seed_file = seeds
         end
       end
 
       subject { Findable.config }
 
-      it { is_expected.to have_attributes(default_storage: storage) }
+      it { is_expected.to have_attributes(seed_file: seeds) }
       it { is_expected.to have_attributes(redis_options: redis) }
 
       it {

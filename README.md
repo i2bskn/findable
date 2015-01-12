@@ -1,5 +1,10 @@
 # Findable
 
+[![Gem Version](https://badge.fury.io/rb/findable.svg)](http://badge.fury.io/rb/findable)
+[![Build Status](https://travis-ci.org/i2bskn/findable.svg)](https://travis-ci.org/i2bskn/findable)
+[![Coverage Status](https://img.shields.io/coveralls/i2bskn/findable.svg)](https://coveralls.io/r/i2bskn/findable)
+[![Code Climate](https://codeclimate.com/github/i2bskn/findable/badges/gpa.svg)](https://codeclimate.com/github/i2bskn/findable)
+
 TODO: Write a gem description
 
 ## Installation
