@@ -8,6 +8,7 @@ module Findable
     include Recordable
     include Connection
     include Namespace
+    extend Association
 
     class << self
       def primary_key
