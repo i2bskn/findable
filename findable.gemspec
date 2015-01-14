@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.version       = Findable::VERSION
   spec.authors       = ["i2bskn"]
   spec.email         = ["i2bskn@gmail.com"]
-  spec.summary       = %q{Static model to behave like ActiveRecord.}
-  spec.description   = %q{Static model to behave like ActiveRecord.}
+  spec.summary       = %q{Redis wrapper with API like ActiveRecord.}
+  spec.description   = %q{Redis wrapper with API like ActiveRecord.}
   spec.homepage      = "https://github.com/i2bskn/findable"
   spec.license       = "MIT"
 
