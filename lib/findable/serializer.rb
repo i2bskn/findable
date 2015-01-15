@@ -1,7 +1,7 @@
 module Findable
   module Serializer
-    def serialize(string)
-      Oj.dump(string)
+    def serialize(obj)
+      Oj.dump(obj)
     end
 
     def deserialize(string)

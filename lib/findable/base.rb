@@ -26,12 +26,8 @@ module Findable
       def find(*ids)
         ids = ids.first if ids.size == 1
         values = find_by_id(ids)
-
-        case
-        when values.empty? then nil
-        when ids.is_a?(Array) then values.map {|val| new(val)}
-        else new(values.first)
-        end
+        raise RecordNotFound.new(id: ids) if values.empty?
+        ids.is_a?(Array) ? values.map {|val| new(val)} : new(values.first)
       end
 
       def find_by(params)

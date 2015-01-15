@@ -11,7 +11,7 @@ module Findable
     end
 
     module ClassMethods
-      def field(attr, options={})
+      def field(attr, options = {})
         options.symbolize_keys!
         define_accessor(attr.to_sym, options)
       end
@@ -32,7 +32,7 @@ module Findable
         end
     end
 
-    def initialize(params={})
+    def initialize(params = {})
       params = deserialize(params) if params.is_a?(String)
       params.symbolize_keys!
       params.keys.each {|attr| self.class.field(attr) }
