@@ -32,7 +32,7 @@ module Findable
       end
 
       def _class_name_for(name, options)
-        options[:class].presence || name.to_s.classify
+        options[:class_name].presence || name.to_s.classify
       end
 
       def _foreign_key_for(name, options)
@@ -62,8 +62,18 @@ module Findable
       def _define_findable_belongs_to(name, options, model)
         foreign_key = _foreign_key_for(name, options)
 
-        define_method name do
-          model.find(self.send(foreign_key))
+        if options[:polymorphic]
+          define_method name do
+            self.send("#{name}_type").constantize.find(self.send(foreign_key))
+          end
+        else
+          define_method name do
+            model.find(self.send(foreign_key))
+          end
+        end
+
+        define_method "#{name}=" do |record|
+          self.send("#{foreign_key}=", record.try(:id))
         end
       end
   end
