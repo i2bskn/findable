@@ -11,6 +11,8 @@ module Findable
     extend Association
 
     class << self
+      alias_method :build, :new
+
       def primary_key
         "id"
       end
@@ -26,27 +28,36 @@ module Findable
       def find(*ids)
         ids = ids.first if ids.size == 1
         values = find_by_id(ids)
-        raise RecordNotFound.new(id: ids) if values.empty?
+        raise RecordNotFound.new(self, id: ids) if values.empty?
         ids.is_a?(Array) ? values.map {|val| new(val)} : new(values.first)
       end
 
       def find_by(params)
-        params.symbolize_keys!
-        if id = params.delete(:id)
-          values = find_by_id(id)
-          return nil if values.empty?
-          return new(values.first) if params.empty?
+        if params.is_a?(Hash)
+          params.symbolize_keys!
+          if id = params.delete(:id)
+            values = find_by_id(id)
+            return nil if values.empty?
+            return new(values.first) if params.empty?
 
-          values.each {|val|
-            record = new(val)
-            return record if params.all? {|k,v| record.send(k) == v }
-          }
+            values.each {|val|
+              record = new(val)
+              return record if params.all? {|k,v| record.send(k) == v }
+            }
+          else
+            all_data.each {|val|
+              record = new(val)
+              return record if params.all? {|k,v| record.send(k) == v }
+            }
+          end
         else
-          all_data.each {|val|
-            record = new(val)
-            return record if params.all? {|k,v| record.send(k) == v }
-          }
+          values = find_by_id(params)
+          values.empty? ? nil : new(values.first)
         end
+      end
+
+      def find_by!(params)
+        find_by(params) || (raise RecordNotFound.new(self, params))
       end
 
       def where(params)
@@ -79,12 +90,7 @@ module Findable
         record.save
         record
       end
-
-      def create!(attrs = {})
-        record = new(attrs)
-        record.save!
-        record
-      end
+      alias_method :create!, :create
 
       def delete_all
         redis.del(data_key)
