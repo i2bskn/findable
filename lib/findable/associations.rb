@@ -1,5 +1,5 @@
 module Findable
-  module Association
+  module Associations
     def has_many(name, scope = nil, options = {})
       super unless _define_association_methods(:has_many, name, options)
     end

@@ -1,3 +1,5 @@
+require "findable/serializer"
+
 module Findable
   module Recordable
     extend ActiveSupport::Concern

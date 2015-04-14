@@ -6,8 +6,6 @@ require "oj"
 require "findable/version"
 require "findable/errors"
 require "findable/configuration"
-require "findable/serializer"
-require "findable/association"
 require "findable/base"
 require "findable/railtie" if defined?(Rails)
 

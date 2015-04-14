@@ -1,13 +1,14 @@
+require "findable/associations"
 require "findable/recordable"
-require "findable/connection"
-require "findable/namespace"
+require "findable/store/connection"
+require "findable/store/namespace"
 
 module Findable
   class Base
     include ActiveModel::Model
     include Recordable
-    include Connection
-    include Namespace
+    include Store::Connection
+    include Store::Namespace
     extend Association
 
     class << self
