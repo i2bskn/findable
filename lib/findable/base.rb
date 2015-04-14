@@ -1,18 +1,18 @@
 require "findable/schema"
 require "findable/store/connection"
 require "findable/store/namespace"
+require "findable/store/serializer"
 require "findable/associations"
-require "findable/serializer"
 
 module Findable
   class Base
-    extend Association
+    extend Associations
 
     include ActiveModel::Model
     include Schema
     include Store::Connection
     include Store::Namespace
-    include Serializer
+    include Store::Serializer
 
     class << self
       alias_method :build, :new

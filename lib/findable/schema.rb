@@ -11,12 +11,7 @@ module Findable
 
     module ClassMethods
       def primary_key
-        @_primary_key ||= "id"
-      end
-
-      def primary_key=(val)
-        @_primary_key = val.to_s
-        field @_primary_key
+        "id"
       end
 
       def field(attr, options = {})
@@ -33,7 +28,7 @@ module Findable
         def define_accessor(attr, options)
           unless public_method_defined?(attr)
             define_attribute_methods attr
-            define_method attr { attributes[attr] }
+            define_method(attr) { attributes[attr] }
           end
         end
     end
@@ -46,8 +41,7 @@ module Findable
     end
 
     def id
-      _primary_key = self.class.primary_key.to_sym
-      attributes[:id].presence || attributes[primary_key].presence
+      attributes[:id].presence
     end
     alias_method :quoted_id, :id
 

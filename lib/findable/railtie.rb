@@ -1,10 +1,10 @@
-require "findable/association/active_record_ext"
+require "findable/associations/active_record_ext"
 
 module Findable
   class Railtie < ::Rails::Railtie
     initializer "findable" do
       ActiveSupport.on_load(:active_record) do
-        ::ActiveRecord::Base.send(:extend, Findable::Association::ActiveRecordExt)
+        ::ActiveRecord::Base.send(:extend, Findable::Associations::ActiveRecordExt)
       end
     end
 
