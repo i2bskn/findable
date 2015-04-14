@@ -1,22 +1,21 @@
-require "findable/associations"
-require "findable/recordable"
+require "findable/schema"
 require "findable/store/connection"
 require "findable/store/namespace"
+require "findable/associations"
+require "findable/serializer"
 
 module Findable
   class Base
+    extend Association
+
     include ActiveModel::Model
-    include Recordable
+    include Schema
     include Store::Connection
     include Store::Namespace
-    extend Association
+    include Serializer
 
     class << self
       alias_method :build, :new
-
-      def primary_key
-        "id"
-      end
 
       def column_names
         raise NotImplementedError
@@ -132,6 +131,30 @@ module Findable
         def find_by_id(id)
           redis.hmget(data_key, *Array(id)).compact
         end
+    end
+
+    def save
+      self.class.insert(self)
+    end
+    alias_method :save!, :save
+
+    def delete
+      self.class.delete(id)
+    end
+    alias_method :destroy, :delete
+
+    def new_record?
+      id ? !self.class.exists?(self) : true
+    end
+
+    def persisted?
+      !new_record?
+    end
+
+    def to_json(methods: nil)
+      _attrs = attributes.dup
+      _attrs.merge!(methods.to_sym => self.send(methods)) if methods
+      serialize(_attrs)
     end
   end
 end
