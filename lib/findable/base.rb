@@ -1,88 +1,91 @@
-require "findable/schema"
-require "findable/store/connection"
-require "findable/store/namespace"
-require "findable/store/serializer"
-require "findable/associations"
-
 module Findable
   class Base
-    extend Associations
-
     include ActiveModel::Model
-    include Schema
-    include Store::Connection
-    include Store::Namespace
-    include Store::Serializer
+    include ActiveModel::AttributeMethods
+
+    attribute_method_suffix "="
+    attribute_method_suffix "?"
 
     class << self
-      alias_method :build, :new
+      ## field definitions
 
-      def column_names
-        raise NotImplementedError
+      def define_field(attr, options = {})
+        unless public_method_defined?(attr)
+          options.symbolize_keys!
+          define_attribute_methods attr
+          define_method(attr) { attributes[attr] }
+          fields << attr.to_sym
+        end
+      end
+
+      def fields
+        @_fields ||= []
+      end
+
+      ## ActiveRecord like APIs
+
+      def primary_key
+        "id"
       end
 
       def all
-        all_data.map {|data| new(data) }
+        data.map {|val| new(val) }
       end
 
-      def find(*ids)
-        ids = ids.first if ids.size == 1
-        values = find_by_id(ids)
-        raise RecordNotFound.new(self, id: ids) if values.empty?
-        ids.is_a?(Array) ? values.map {|val| new(val)} : new(values.first)
+      def find(ids)
+        if values = find_by_ids(ids).compact.presence
+          ids.is_a?(Array) ? values.map {|val| new(val) } : new(values.first)
+        else
+          raise RecordNotFound.new(self, id: ids)
+        end
       end
 
-      def find_by(params)
-        if params.is_a?(Hash)
-          params.symbolize_keys!
-          if id = params.delete(:id)
-            values = find_by_id(id)
-            return nil if values.empty?
-            return new(values.first) if params.empty?
-
-            values.each {|val|
-              record = new(val)
-              return record if params.all? {|k,v| record.send(k) == v }
-            }
+      def find_by(conditions)
+        if conditions.is_a?(Hash)
+          conditions.symbolize_keys!
+          if id = conditions.delete(:id)
+            values = find_by_ids(id).compact
+            case
+            when values.empty? then nil
+            when conditions.empty? then new(values.first)
+            else
+              value = values.detect {|val|
+                record = new(val)
+                conditions.all? {|k, v| record.public_send(k) == v }
+              }
+              value ? new(value) : nil
+            end
           else
-            all_data.each {|val|
-              record = new(val)
-              return record if params.all? {|k,v| record.send(k) == v }
+            all.detect {|r|
+              conditions.all? {|k, v| r.public_send(k) == v }
             }
           end
         else
-          values = find_by_id(params)
+          values = find_by_ids(conditions).compact
           values.empty? ? nil : new(values.first)
         end
       end
 
-      def find_by!(params)
-        find_by(params) || (raise RecordNotFound.new(self, params))
+      def find_by!(conditions)
+        find_by(conditions.dup) || (raise RecordNotFound.new(self, conditions))
       end
 
-      def where(params)
-        all.select {|record| params.all? {|k,v| record.send(k) == v } }
-      end
-
-      def exists?(record)
-        if record.is_a?(self)
-          _id = record.id
-          return false unless _id
+      def where(conditions)
+        if id = conditions.delete(:id)
+          values = find_by_ids(id).compact
+          if conditions.empty?
+            values.map {|val| new(val) }
+          else
+            values.map {|val|
+              record = new(val)
+              conditions.all? {|k, v| record.public_send(k) == v } ? record : nil
+            }.compact
+          end
         else
-          _id = record.to_i
+          all.select {|r|
+            conditions.all? {|k, v| r.public_send(k) == v }
+          }
         end
-
-        redis.hexists data_key, _id
-      end
-
-      delegate :first, :last, to: :all
-
-      def count
-        redis.hlen(data_key)
-      end
-
-      def ids
-        redis.hkeys(data_key).map(&:to_i)
       end
 
       def create(attrs = {})
@@ -92,56 +95,69 @@ module Findable
       end
       alias_method :create!, :create
 
-      def delete_all
-        redis.del(data_key)
+      [:first, :last].each do |m|
+        define_method(m) do
+          value = self.data.public_send(m)
+          value ? new(value) : nil
+        end
       end
+
+      ## Query APIs
+
+      delegate :find_by_ids, :data, to: :query
+      delegate :count, :ids, :delete_all, to: :query
       alias_method :destroy_all, :delete_all
 
-      def transaction(&block)
-        redis.multi &block
+      def exists?(obj)
+        if _id = id_from(obj)
+          query.exists?(data_key, _id)
+        else
+          false
+        end
+      end
+
+      def insert(obj)
+        query.insert(obj.attributes)
+      end
+
+      def delete(obj)
+        if _id = id_from(obj)
+          query.delete(_id)
+        end
       end
 
       def import(records)
-        data = records.each_with_object([]) {|record, obj|
-          record.id ||= auto_incremented_id
-          obj << record.id
-          obj << record.to_json
-        }
-        redis.hmset(data_key, *data)
+        query.import(records.map(&:attributes))
       end
 
-      def insert(record)
-        record.id ||= auto_incremented_id
-        redis.hset(data_key, record.id, record.to_json)
-      end
-
-      def delete(id)
-        redis.hdel(data_key, id)
+      def query
+        @_query ||= Query.new(self)
       end
 
       private
-        def auto_incremented_id
-          redis.hincrby(info_key, :auto_inclement, 1)
-        end
-
-        def all_data
-          redis.hvals(data_key)
-        end
-
-        def find_by_id(id)
-          redis.hmget(data_key, *Array(id)).compact
+        def id_from(obj)
+          obj.is_a?(self) ? obj.id : obj.to_i
         end
     end
 
-    def save
-      self.class.insert(self)
+    def initialize(params = {})
+      params = Oj.load(params) if params.is_a?(String)
+      params.symbolize_keys!
+      params.keys.each {|attr| self.class.define_field(attr) }
+      @_attributes = params
     end
-    alias_method :save!, :save
 
-    def delete
-      self.class.delete(id)
+    def id
+      attributes[:id].presence
     end
-    alias_method :destroy, :delete
+
+    def id=(value)
+      attributes[:id] = value
+    end
+
+    def hash
+      id.hash
+    end
 
     def new_record?
       id ? !self.class.exists?(self) : true
@@ -151,11 +167,29 @@ module Findable
       !new_record?
     end
 
-    def to_json(methods: nil)
-      _attrs = attributes.dup
-      _attrs.merge!(methods.to_sym => self.send(methods)) if methods
-      serialize(_attrs)
+    def save
+      @_attributes = self.class.insert(self)
+      self
     end
+    alias_method :save!, :save
+
+    def delete
+      self.class.delete(self)
+    end
+    alias_method :destroy, :delete
+
+    def attributes
+      @_attributes ||= {}
+    end
+
+    private
+      def attribute=(attr, value)
+        attributes[attr.to_sym] = value
+      end
+
+      def attribute?(attr)
+        attributes[attr.to_sym].present?
+      end
   end
 end
 
