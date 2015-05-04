@@ -1,14 +1,10 @@
 language: ruby
 rvm:
-  - 2.1.0
-  - 2.2.0
-branches:
-  only:
-    - master
+  - 2.1.5
+  - 2.2.1
 gemfile:
   - Gemfile
 script: bundle exec rake spec
-notifications:
-  mails:
-    - i2bskn@gmail.com
+services:
+  - redis-server
 

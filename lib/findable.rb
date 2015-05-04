@@ -1,6 +1,6 @@
 require "active_support"
 require "active_model"
-require "redis"
+require "redis/objects"
 require "oj"
 
 require "findable/version"
