@@ -126,10 +126,6 @@ module Findable
         end
       end
 
-      def import(records)
-        query.import(records.map(&:attributes))
-      end
-
       def query
         @_query ||= Query.new(self)
       end

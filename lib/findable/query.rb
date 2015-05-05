@@ -37,9 +37,9 @@ module Findable
     def import(hashes)
       transaction do
         auto_incremented = hashes.each_with_object([]) do |hash, obj|
-          hash[:id] = auto_incremented_id(hash[:id])
-          obj << hash[:id]
-          obj << hash
+          hash["id"] = auto_incremented_id(hash["id"])
+          obj << hash["id"]
+          obj << Oj.dump(hash)
         end
         redis.hmset(data_key, *auto_incremented)
       end
@@ -57,7 +57,9 @@ module Findable
 
     def transaction
       raise ArgumentError, "Require block" unless block_given?
-      unless Thread.current[thread_key]
+      if Thread.current[thread_key]
+        yield
+      else
         begin
           Thread.current[thread_key] = true
           Redis::Lock.new(lock_key).lock do
@@ -75,9 +77,11 @@ module Findable
       def auto_incremented_id(id)
         if id.present?
           current = redis.hget(info_key, AUTO_INCREMENT_KEY).to_i
-          if id.to_i > current
-            redis.hset(info_key, AUTO_INCREMENT_KEY, id.to_i)
+          id = id.to_i
+          if id > current
+            redis.hset(info_key, AUTO_INCREMENT_KEY, id)
           end
+          id
         else
           redis.hincrby(info_key, AUTO_INCREMENT_KEY, 1)
         end

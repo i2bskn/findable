@@ -1,61 +1,57 @@
 module Findable
   class Seed
-    attr_reader :full_path, :namespaced, :ext
+    class << self
+      def target_files(seed_dir: nil, seed_files: nil)
+        target_dir = pathname(seed_dir) || Findable.config.seed_dir
+        raise ArgumentError unless target_dir
+        Pathname.glob(target_dir.join("**", "*")).map {|full_path|
+          new(full_path, target_dir)
+        }.select {|seed|
+          seed_files.present? ? seed_files.include?(seed.basename) : true
+        }
+      end
 
-    def initialize(path, seed_dir)
+      def pathname(path)
+        case path
+        when Pathname then path
+        when String then Pathname.new(path)
+        else nil
+        end
+      end
+    end
+
+    def initialize(full_path, seed_dir)
+      @_full_path = full_path
       @_seed_dir = seed_dir
-      self.full_path = path
     end
 
-    def full_path=(path)
-      @full_path = path
-      _path = path.gsub(@_seed_dir, "")
-      @namespaced = /^\// =~ _path ? _path.from(1) : _path
-      @ext = @namespaced[/^.*(?<ext>\.[^\.]+)$/, :ext] || (raise ArgumentError)
-    end
-
-    def base_name
-      @_base ||= @namespaced.sub(@ext, "")
+    def basename
+      @_basename ||= @_full_path.basename(".*").to_s
     end
 
     def model
-      base_name.split("/").reverse.map.with_index {|n,i|
-        i.zero? ? n.singularize : n
-      }.reverse.map(&:camelize).join("::").constantize
-    end
-
-    def load_file
-      case @ext
-      when ".yml"
-        YAML.load_file(@full_path).values
-      else
-        raise UnexpectedFormat
-      end
+      @_model ||= from_seed_dir(without_ext(@_full_path)).to_s.classify.constantize
     end
 
     def bootstrap!
-      model.transaction do
+      model.query.transaction do
         model.delete_all
-        records = load_file.map {|data| model.new(data) }
-        model.import records
+        model.query.import YAML.load_file(@_full_path).values
       end
     end
 
-    class << self
-      def target_files(seed_dir, tables = nil)
-        Dir.glob(patterns(seed_dir)).map {|full_path|
-          Seed.new(full_path, seed_dir)
-        }.select {|seed|
-          tables ? tables.include?(seed.base_name) : true
-        }
+    private
+      def pathname(path)
+        self.class.pathname(path)
       end
 
-      def patterns(seed_dir)
-        %w(yml).map {|format|
-          Rails.root.join("#{seed_dir}/**/*.#{format}").to_s
-        }
+      def without_ext(path)
+        pathname(path).dirname.join(pathname(path).basename(".*"))
       end
-    end
+
+      def from_seed_dir(path)
+        pathname(path).relative_path_from(@_seed_dir)
+      end
   end
 end
 

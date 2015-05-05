@@ -3,9 +3,6 @@
 # Require seed support module
 require "findable/seed"
 
-# Path to the reading of the seed.
-seed_dir = File.expand_path("../findable_seeds", __FILE__)
-
 # Target seed files.
 # Run all in the case of `nil`.
 # Example of if you want to run some only.
@@ -13,5 +10,5 @@ seed_dir = File.expand_path("../findable_seeds", __FILE__)
 seed_files = nil
 
 # Execute
-Findable::Seed.target_files(seed_dir, seed_files).each {|seed| seed.bootstrap! }
+Findable::Seed.target_files(seed_files: seed_files).each {|seed| seed.bootstrap! }
 

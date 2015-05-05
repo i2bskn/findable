@@ -2,7 +2,8 @@ module Findable
   class Configuration
     VALID_OPTIONS = [
       :redis_options,
-      :seed_file
+      :seed_dir,
+      :seed_file,
     ].freeze
 
     attr_accessor *VALID_OPTIONS
@@ -26,6 +27,7 @@ module Findable
 
     def reset
       self.redis_options = nil
+      self.seed_dir = defined?(Rails) ? Rails.root.join("db", "findable_seeds") : nil
       self.seed_file = defined?(Rails) ? Rails.root.join("db", "findable_seeds.rb") : nil
     end
 
