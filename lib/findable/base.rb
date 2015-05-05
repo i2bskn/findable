@@ -1,7 +1,11 @@
+require "findable/associations"
+
 module Findable
   class Base
     include ActiveModel::Model
     include ActiveModel::AttributeMethods
+
+    include Associations
 
     attribute_method_suffix "="
     attribute_method_suffix "?"
@@ -13,19 +17,19 @@ module Findable
         unless public_method_defined?(attr)
           options.symbolize_keys!
           define_attribute_methods attr
-          define_method(attr) { attributes[attr] }
-          fields << attr.to_sym
+          define_method(attr) { attributes[attr.to_sym] }
+          column_names << attr.to_sym
         end
-      end
-
-      def fields
-        @_fields ||= []
       end
 
       ## ActiveRecord like APIs
 
       def primary_key
         "id"
+      end
+
+      def column_names
+        @_column_names ||= [:id]
       end
 
       def all
