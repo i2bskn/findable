@@ -5,7 +5,7 @@
 [![Coverage Status](https://img.shields.io/coveralls/i2bskn/findable.svg)](https://coveralls.io/r/i2bskn/findable)
 [![Code Climate](https://codeclimate.com/github/i2bskn/findable/badges/gpa.svg)](https://codeclimate.com/github/i2bskn/findable)
 
-Redis wrapper with API like ActiveRecord. (While creating...)
+Redis wrapper with API like ActiveRecord.
 
 ## Installation
 
@@ -17,27 +17,79 @@ gem "findable"
 
 And then execute:
 
-    $ bundle
+```
+$ bundle
+```
+
+Setup config file and seed script:
+
+```
+$ rails generate findable:install
+```
+
+Added following files:
+
+- `config/initializers/findable.rb`
+    - Config file for Findable.
+- `db/findable_seeds.rb`
+    - Seed script for Findable.
+- `db/findable_seeds/.keep`
+    - Directory for storing seed files of Findable.
 
 ## Usage
 
+Create seed file if static data.
+
+Example `db/findable_seeds/tags.yml`:
+
+```yaml
+data1:
+  id: 1
+  name: Ruby
+```
+
+Create model.
+
+Example `app/models/tag.rb`:
+
 ```ruby
-class Company < ActiveRecord::Base
-  has_many :person
+class Tag < Findable::Base
+end
+```
+
+Execute seed script if you create seed files.
+
+```
+$ rake findable:seeds
+```
+
+Manipulate data with API like ActiveRecord.
+
+```
+$ rails console
+pry(main)> Tag.find(1)
+=> #<Tag:0x00000108068430 @_attributes={:id=>1, :name=>"Ruby"}>
+pry(main)> golang = Tag.create(name: "Go")
+=> #<Tag:0x00000107ff6420 @_attributes={:name=>"Go", :id=>2}>
+pry(main)> Tag.all.each {|tag| p tag.name }
+"Ruby"
+"Go"
+=> [#<Tag:0x00000107f49568 @_attributes={:id=>1, :name=>"Ruby"}>, #<Tag:0x00000107f492e8 @_attributes={:name=>"Go", :id=>2}>]
+```
+
+## Associations
+
+It is possible to use the `belongs_to` and `has_one` and `has_many`.
+Mutually can refer to objects of ActiveRecord and Findable.
+
+```ruby
+class Article < ActiveRecord::Base
+  include Findable::Associations::ActiveRecordExt
+  belongs_to :tag
 end
 
-class Person < Findable::Base
-  fields :name, :email, :gender, :company_id
-  belongs_to :company
-end
-
-person = Person.new(name: "Ken Iiboshi", gender: "male")
-person.email = "i2bskn@example.com"
-person.save
-
-people = Person.where(gender: "male")
-people.each do |person|
-  puts person.name
+class Tag < Findable::Base
+  has_many :articles
 end
 ```
 
