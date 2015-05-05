@@ -13,6 +13,12 @@ module Findable
           model_name.constantize
         end
       end
+
+      def self.parse_args(args)
+        copied = args.dup
+        options = copied.extract_options!
+        [copied.first, options]
+      end
     end
   end
 end

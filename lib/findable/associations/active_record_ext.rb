@@ -4,7 +4,8 @@ module Findable
       extend ActiveSupport::Concern
 
       module ClassMethods
-        def has_many(name, scope = nil, options = {}, &extension)
+        def has_many(*args)
+          name, options = Utils.parse_args(args)
           model = Utils.model_for(name, collection: true, safe: true, **options)
 
           if model && model < Findable::Base
@@ -27,7 +28,8 @@ module Findable
           end
         end
 
-        def has_one(name, scope = nil, options = {})
+        def has_one(*args)
+          name, options = Utils.parse_args(args)
           model = Utils.model_for(name, safe: true, **options)
 
           if model && model < Findable::Base
@@ -50,7 +52,8 @@ module Findable
           end
         end
 
-        def belongs_to(name, scope = nil, options = {})
+        def belongs_to(*args)
+          name, options = Utils.parse_args(args)
           model = Utils.model_for(name, safe: true, **options)
 
           if model && model < Findable::Base
