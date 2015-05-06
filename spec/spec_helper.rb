@@ -13,6 +13,7 @@ SimpleCov.start do
   add_filter "example"
 end
 
+require "pry"
 require "findable"
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
