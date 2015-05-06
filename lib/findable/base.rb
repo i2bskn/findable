@@ -114,7 +114,7 @@ module Findable
 
       def exists?(obj)
         if _id = id_from(obj)
-          query.exists?(data_key, _id)
+          query.exists?(_id)
         else
           false
         end
