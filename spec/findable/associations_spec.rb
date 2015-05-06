@@ -1,7 +1,6 @@
 require "spec_helper"
 
 describe Findable::Associations do
-  include_context "AssociationModels"
   let(:group) { Group.first }
   let(:info) { Info.first }
   let(:tag) { Tag.first }
