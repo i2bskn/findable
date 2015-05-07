@@ -4,6 +4,7 @@ describe Findable::Associations::ActiveRecordExt do
   let(:article) { Article.first }
   let(:user) { User.first }
   let(:email) { Email.first }
+  let(:group) { Group.first }
 
   describe "#has_many" do
     it { expect(user.tags).to be_kind_of(Array) }
@@ -20,6 +21,10 @@ describe Findable::Associations::ActiveRecordExt do
   describe "#belongs_to" do
     it { expect(article.tag).to be_kind_of(Tag) }
     it { expect(email.user).to be_kind_of(User) }
+    it {
+      email.group = group
+      expect(email.group_id).to eq(group.id)
+    }
   end
 end
 

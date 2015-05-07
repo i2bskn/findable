@@ -44,7 +44,7 @@ Info.belongs_to :group
 Info.belongs_to :user
 Info.belongs_to :content, polymorphic: true
 
-[Article, User].each {|ar| ar.include Findable::Associations::ActiveRecordExt }
+[Article, User, Email].each {|ar| ar.include Findable::Associations::ActiveRecordExt }
 Article.belongs_to :tag
 Article.belongs_to :user
 User.has_many :tags
