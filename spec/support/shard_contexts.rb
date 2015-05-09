@@ -9,3 +9,11 @@ shared_context "TemporaryModel" do
   let(:model) { Size }
 end
 
+shared_context "ReadModel" do
+  let(:read_model) { Group }
+  let(:id) { 1 }
+  let(:invalid_id) { 2 }
+  let(:name) { "group1" }
+  let(:invalid_name) { "invalid" }
+end
+
