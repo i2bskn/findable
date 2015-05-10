@@ -11,7 +11,7 @@ module Findable
         # Generate connection with redis options or default connection.
         # @return [Redis] Redis connection
         def generate_redis_connection!
-          redis_options ? Redis.new(*redis_options) : Redis.current
+          redis_options ? Redis.new(**redis_options) : Redis.current
         end
 
         # Returns redis options from configuration.
