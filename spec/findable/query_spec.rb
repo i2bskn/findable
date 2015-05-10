@@ -2,8 +2,7 @@ require "spec_helper"
 
 describe Findable::Query do
   include_context "TemporaryModel"
-  let(:read_model) { Group }
-  let(:name) { "some text" }
+  include_context "ReadOnlyModel"
 
   describe "#data" do
     it { expect(read_model.query.data).to be_kind_of(Array) }
@@ -65,6 +64,9 @@ describe Findable::Query do
 
     it { expect(model.query.redis.exists(model.query.data_key)).to be_falsey }
     it { expect(model.query.redis.exists(model.query.info_key)).to be_falsey }
+  end
+
+  describe "#transaction" do
   end
 end
 

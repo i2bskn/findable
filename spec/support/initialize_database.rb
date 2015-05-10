@@ -1,3 +1,7 @@
+# =========================
+# Initialize and Migrations
+# =========================
+
 # Initialize Redis
 Redis.current.flushdb
 
@@ -7,61 +11,97 @@ ActiveRecord::Base.establish_connection({
   database: ":memory:",
 })
 
-ActiveRecord::Migration.create_table :users do |t|
+ActiveRecord::Migration.create_table :companies do |t|
   t.string :name
 end
 
-ActiveRecord::Migration.create_table :articles do |t|
-  t.string :title
-  t.integer :tag_id
-  t.integer :user_id
+ActiveRecord::Migration.create_table :stores do |t|
+  t.string :name
+  t.integer :company_id
 end
 
 ActiveRecord::Migration.create_table :emails do |t|
   t.string :address
+  t.integer :store_id
   t.integer :user_id
-  t.integer :group_id
 end
 
-# Model definitions
-class Group < Findable::Base; end
-class Tag < Findable::Base; end
-class Info < Findable::Base; end
+ActiveRecord::Migration.create_table :pictures do |t|
+  t.string :name
+  t.integer :user_id
+end
 
-class Article < ActiveRecord::Base; end
-class User < ActiveRecord::Base; end
-class Email < ActiveRecord::Base; end
+# =========================
+# Model definitions
+# =========================
+
+# Model < Findable
+%w(Category Product Image User).each do |class_name|
+  Object.const_set(class_name, Class.new(Findable::Base))
+end
+
+# Model < ActiveRecord
+%w(Company Store Email Picture).each do |class_name|
+  Object.const_set(class_name, Class.new(ActiveRecord::Base))
+end
+
+ActiveRecord::Base.subclasses.each do |ar|
+  ar.include Findable::Associations::ActiveRecordExt
+end
 
 # Associations
-Group.has_many :tags
-Group.has_one :info
-Group.has_one :email
-Group.belongs_to :content, polymorphic: true
-Tag.belongs_to :group
-Tag.belongs_to :user
-Tag.has_many :articles
-Info.belongs_to :group
-Info.belongs_to :user
-Info.belongs_to :content, polymorphic: true
+Category.has_many :products
+Product.belongs_to :category
+Product.has_one :image
+Image.belongs_to :product
 
-[Article, User, Email].each {|ar| ar.include Findable::Associations::ActiveRecordExt }
-Article.belongs_to :tag
-Article.belongs_to :user
-User.has_many :tags
-User.has_many :articles
-User.has_one :info
+Company.has_many :stores
+Store.belongs_to :company
+Store.has_one :email
+Email.belongs_to :store
+
+User.belongs_to :content, polymorphic: true
+
+User.has_many :pictures
+Picture.belongs_to :user
+
 User.has_one :email
 Email.belongs_to :user
-Email.belongs_to :group
 
+Company.has_many :users
+User.belongs_to :company
+
+Company.has_one :image
+Image.belongs_to :company
+
+# =========================
 # Data import
-Group.query.import([{id: 1, name: "group1", content_type: "Article", content_id: 1}])
-Tag.query.import([
-  {id: 1, name: "tag1", group_id: 1, user_id: 1},
-  {id: 2, name: "tag2", group_id: 1, user_id: 1},
-])
-Info.query.import([{id: 1, group_id: 1, user_id: 1, content_type: "Group", content_id: 1}])
-Article.create!(id: 1, title: "some title", tag_id: 1, user_id: 1)
-User.create!(id: 1, name: "some user")
-Email.create!(id: 1, address: "some@example.com", user_id: 1, group_id: 1)
+# =========================
+CategoryData = [{id: 1, name: "Book"}]
+Category.query.import(CategoryData)
+
+ProductData = [
+  {id: 1, name: "book 1", category_id: 1},
+  {id: 2, name: "book 2", category_id: 1},
+]
+Product.query.import(ProductData)
+
+ImageData = [
+  {id: 1, product_id: 1, company_id: 1},
+  {id: 2, product_id: 2, company_id: 1},
+]
+Image.query.import(ImageData)
+
+UserData = [
+  {id: 1, name: "user 1", content_type: "Image", content_id: 1, company_id: 1},
+  {id: 2, name: "user 2", content_type: "Picture", content_id: 1, company_id: 1}
+]
+User.query.import(UserData)
+
+Company.create!(id: 1, name: "company 1")
+Company.create!(id: 2, name: "company 2")
+Store.create(id: 1, name: "store 1", company_id: 1)
+Email.create!(id: 1, address: "findable@example.com", store_id: 1, user_id: 1)
+Picture.create!(id: 1, name: "picture 1", user_id: 1)
+Picture.create!(id: 2, name: "picture 2", user_id: 1)
 

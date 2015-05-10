@@ -19,6 +19,17 @@ module Findable
         options = copied.extract_options!
         [copied.first, options]
       end
+
+      def self.add_reflection(macro, name, options, ar)
+        reflection = ActiveRecord::Reflection.create(
+          macro.to_sym,
+          name.to_sym,
+          nil,
+          options,
+          ar
+        )
+        ActiveRecord::Reflection.add_reflection(ar, name.to_sym, reflection)
+      end
     end
   end
 end

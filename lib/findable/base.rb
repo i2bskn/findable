@@ -13,9 +13,8 @@ module Findable
     class << self
       ## field definitions
 
-      def define_field(attr, options = {})
+      def define_field(attr)
         unless public_method_defined?(attr)
-          options.symbolize_keys!
           define_attribute_methods attr
           define_method(attr) { attributes[attr.to_sym] }
           column_names << attr.to_sym

@@ -4,12 +4,12 @@ describe Findable::Associations::Utils do
   let(:utils) { Findable::Associations::Utils }
 
   describe "#model_for" do
-    include_context "FindableModels"
-    let(:model_name) { findable_model.model_name }
+    include_context "TemporaryModel"
+    let(:model_name) { model.model_name }
 
-    it { expect(utils.model_for(model_name.singular)).to eq(findable_model) }
-    it { expect(utils.model_for(model_name.plural, collection: true)).to eq(findable_model) }
-    it { expect(utils.model_for("invalid", class_name: model_name.name)).to eq(findable_model) }
+    it { expect(utils.model_for(model_name.singular)).to eq(model) }
+    it { expect(utils.model_for(model_name.plural, collection: true)).to eq(model) }
+    it { expect(utils.model_for("invalid", class_name: model_name.name)).to eq(model) }
 
     it { expect { utils.model_for("invalid") }.to raise_error }
     it { expect { utils.model_for("invalid", safe: true) }.not_to raise_error }

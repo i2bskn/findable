@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Findable::Base do
   include_context "TemporaryModel"
-  include_context "ReadModel"
+  include_context "ReadOnlyModel"
 
   describe ".primary_key" do
     it { expect(model.primary_key).to eq("id") }

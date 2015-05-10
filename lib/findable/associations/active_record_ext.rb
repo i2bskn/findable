@@ -15,14 +15,7 @@ module Findable
               model.where(foreign_key => public_send(self.class.primary_key))
             end
 
-            reflection = ActiveRecord::Reflection.create(
-              :has_many,
-              name.to_sym,
-              nil,
-              options,
-              self,
-            )
-            ActiveRecord::Reflection.add_reflection(self, name.to_sym, reflection)
+            Utils.add_reflection(:has_many, name.to_sym, options, self)
           else
             super
           end
@@ -39,14 +32,7 @@ module Findable
               model.find_by(foreign_key => public_send(self.class.primary_key))
             end
 
-            reflection = ActiveRecord::Reflection.create(
-              :has_one,
-              name.to_sym,
-              nil,
-              options,
-              self,
-            )
-            ActiveRecord::Reflection.add_reflection(self, name.to_sym, reflection)
+            Utils.add_reflection(:has_one, name.to_sym, options, self)
           else
             super
           end
@@ -68,14 +54,7 @@ module Findable
               public_send("#{foreign_key}=", value)
             end
 
-            reflection = ActiveRecord::Reflection.create(
-              :belongs_to,
-              name.to_sym,
-              nil,
-              options,
-              self,
-            )
-            ActiveRecord::Reflection.add_reflection(self, name.to_sym, reflection)
+            Utils.add_reflection(:belongs_to, name.to_sym, options, self)
           else
             super
           end

@@ -1,29 +1,29 @@
 require "spec_helper"
 
 describe Findable::Associations::ActiveRecordExt do
-  let(:article) { Article.first }
-  let(:user) { User.first }
+  let(:company) { Company.first }
+  let(:store) { Store.first }
   let(:email) { Email.first }
-  let(:group) { Group.first }
+  let(:user) { User.first }
 
   describe "#has_many" do
-    it { expect(user.tags).to be_kind_of(Array) }
-    it { expect(user.tags.first).to be_kind_of(Tag) }
-    it { expect(user.articles).to be_kind_of(ActiveRecord::Relation) }
-    it { expect(user.articles.first).to be_kind_of(Article) }
+    it { expect(company.users).to be_kind_of(Array) }
+    it { expect(company.users.first).to be_kind_of(User) }
+    it { expect(company.stores).to be_kind_of(ActiveRecord::Relation) }
+    it { expect(company.stores.first).to be_kind_of(Store) }
   end
 
   describe "#has_one" do
-    it { expect(user.info).to be_kind_of(Info) }
-    it { expect(user.email).to be_kind_of(Email) }
+    it { expect(company.image).to be_kind_of(Image) }
+    it { expect(store.email).to be_kind_of(Email) }
   end
 
   describe "#belongs_to" do
-    it { expect(article.tag).to be_kind_of(Tag) }
     it { expect(email.user).to be_kind_of(User) }
+    it { expect(store.company).to be_kind_of(Company) }
     it {
-      email.group = group
-      expect(email.group_id).to eq(group.id)
+      email.user = user
+      expect(email.user_id).to eq(user.id)
     }
   end
 end
