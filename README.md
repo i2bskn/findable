@@ -7,6 +7,10 @@
 
 Redis wrapper with API like ActiveRecord.
 
+## Requirements
+
+- Redis
+
 ## Installation
 
 Add this line to your application's Gemfile:

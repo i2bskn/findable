@@ -7,4 +7,3 @@ gemfile:
 script: bundle exec rake spec
 services:
   - redis-server
-
