@@ -4,6 +4,8 @@ describe Findable::Query do
   include_context "TemporaryModel"
   include_context "ReadOnlyModel"
 
+  let(:auto_increment_key) { Findable::Query::Namespace::AUTO_INCREMENT_KEY }
+
   describe "#data" do
     it { expect(read_model.query.data).to be_kind_of(Array) }
     it { expect(read_model.query.data.size).to eq(1) }
@@ -67,6 +69,34 @@ describe Findable::Query do
   end
 
   describe "#transaction" do
+  end
+
+  describe "#auto_incremented_id" do
+    context "when id is nil" do
+      let!(:id) { model.query.send(:auto_incremented_id, nil) }
+      let(:info_id) {
+        model.query.redis.hget(model.query.info_key, auto_increment_key).to_i
+      }
+
+      it { expect(id).to be_kind_of(Integer) }
+      it { expect(id).to eq(info_id) }
+    end
+
+    context "when id is not nil" do
+      before { model.query.redis.hset(model.query.info_key, auto_increment_key, 10) }
+
+      it {
+        expect_any_instance_of(Redis).not_to receive(:hset)
+        id = model.query.send(:auto_incremented_id, 5)
+        expect(id).to eq(5)
+      }
+
+      it {
+        expect_any_instance_of(Redis).to receive(:hset)
+        id = model.query.send(:auto_incremented_id, 15)
+        expect(id).to eq(15)
+      }
+    end
   end
 end
 

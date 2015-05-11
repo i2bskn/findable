@@ -1,5 +1,6 @@
 require "findable/query/connection"
 require "findable/query/namespace"
+require "findable/query/lock"
 
 module Findable
   class Query
@@ -27,7 +28,7 @@ module Findable
     end
 
     def insert(hash)
-      transaction do
+      lock do
         hash[:id] = auto_incremented_id(hash[:id])
         redis.hset(data_key, hash[:id], Oj.dump(hash))
       end
@@ -35,7 +36,7 @@ module Findable
     end
 
     def import(hashes)
-      transaction do
+      lock do
         auto_incremented = hashes.each_with_object([]) do |hash, obj|
           hash["id"] = auto_incremented_id(hash["id"])
           obj << hash["id"]
@@ -55,22 +56,9 @@ module Findable
       end
     end
 
-    def transaction
+    def lock
       raise ArgumentError, "Require block" unless block_given?
-      if Thread.current[thread_key]
-        yield
-      else
-        begin
-          Thread.current[thread_key] = true
-          Redis::Lock.new(lock_key).lock do
-            yield
-          end
-        rescue Redis::Lock::LockTimeout
-          raise
-        ensure
-          Thread.current[thread_key] = nil
-        end
-      end
+      Lock.new(lock_key, thread_key).lock { yield }
     end
 
     private

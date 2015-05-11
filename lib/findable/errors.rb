@@ -7,5 +7,7 @@ module Findable
       super("Couldn't find #{model.model_name.name} with #{params.inspect}")
     end
   end
+
+  class LockTimeout < FindableError; end
 end
 

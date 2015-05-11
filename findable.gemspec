@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "activesupport"
   spec.add_dependency "activemodel"
-  spec.add_dependency "redis-objects"
+  spec.add_dependency "redis"
   spec.add_dependency "oj"
 
   spec.add_development_dependency "bundler"
