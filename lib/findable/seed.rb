@@ -34,7 +34,7 @@ module Findable
     end
 
     def bootstrap!
-      model.query.transaction do
+      model.query.lock do
         model.delete_all
         model.query.import YAML.load_file(@_full_path).values
       end

@@ -1,6 +1,6 @@
 namespace :findable do
   desc "Load seed file of findable."
-  task :seed => :environment do
+  task :seeds => :environment do
     if Findable.config.seed_file
       load Findable.config.seed_file
     end
