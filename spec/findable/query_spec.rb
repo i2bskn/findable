@@ -99,4 +99,3 @@ describe Findable::Query do
     end
   end
 end
-

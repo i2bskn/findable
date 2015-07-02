@@ -69,4 +69,3 @@ describe ActiveModel::Lint::Tests do
     end
   end
 end
-

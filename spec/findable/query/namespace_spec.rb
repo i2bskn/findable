@@ -49,4 +49,3 @@ describe Findable::Query::Namespace do
     }
   end
 end
-

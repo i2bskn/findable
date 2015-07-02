@@ -27,4 +27,3 @@ RSpec.configure do |config|
   config.order = :random
   config.after(:each) { Findable.config.reset }
 end
-

@@ -72,4 +72,3 @@ describe Findable::Base do
     it { expect(model).to respond_to(:create!) }
   end
 end
-

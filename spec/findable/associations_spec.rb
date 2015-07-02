@@ -31,4 +31,3 @@ describe Findable::Associations do
     }
   end
 end
-

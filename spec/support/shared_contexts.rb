@@ -13,4 +13,3 @@ shared_context "ReadOnlyModel" do
   let(:name) { CategoryData.first[:name] }
   let(:invalid_name) { "invalid" }
 end
-

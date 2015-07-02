@@ -45,4 +45,3 @@ module Findable
 
   extend Configuration::Accessible
 end
-

@@ -104,4 +104,3 @@ Store.create(id: 1, name: "store 1", company_id: 1)
 Email.create!(id: 1, address: "findable@example.com", store_id: 1, user_id: 1)
 Picture.create!(id: 1, name: "picture 1", user_id: 1)
 Picture.create!(id: 2, name: "picture 2", user_id: 1)
-

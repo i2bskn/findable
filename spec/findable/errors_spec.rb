@@ -14,4 +14,3 @@ describe "Errors" do
     it { expect(error.message).to match(Regexp.new({id: 1}.inspect)) }
   end
 end
-

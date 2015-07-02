@@ -10,4 +10,3 @@ require "findable/configuration"
 require "findable/query"
 require "findable/base"
 require "findable/railtie" if defined?(Rails)
-

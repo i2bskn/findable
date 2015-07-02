@@ -12,4 +12,3 @@ desc "Console with library"
 task :console do
   sh "pry -I lib -r bundler/setup -r findable"
 end
-

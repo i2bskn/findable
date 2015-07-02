@@ -10,4 +10,3 @@ module Findable
 
   class LockTimeout < FindableError; end
 end
-

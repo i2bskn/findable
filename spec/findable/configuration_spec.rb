@@ -64,4 +64,3 @@ describe Findable::Configuration do
     end
   end
 end
-

@@ -8,4 +8,3 @@ Findable.configure do |config|
   # Seed file of Findable.
   config.seed_file = Rails.root.join("db", "findable_seeds.rb")
 end
-

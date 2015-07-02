@@ -61,4 +61,3 @@ describe Findable::Query::Connection do
     end
   end
 end
-

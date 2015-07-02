@@ -27,4 +27,3 @@ describe Findable::Associations::ActiveRecordExt do
     }
   end
 end
-

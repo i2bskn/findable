@@ -6,4 +6,3 @@ namespace :findable do
     end
   end
 end
-
