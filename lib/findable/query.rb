@@ -30,7 +30,7 @@ module Findable
     def insert(hash)
       lock do
         hash[:id] = auto_incremented_id(hash[:id])
-        redis.hset(data_key, hash[:id], Oj.dump(hash))
+        redis.hset(data_key, hash[:id], serializer.dump(hash))
       end
       hash
     end
@@ -40,7 +40,7 @@ module Findable
         auto_incremented = hashes.each_with_object([]) do |hash, obj|
           hash["id"] = auto_incremented_id(hash["id"])
           obj << hash["id"]
-          obj << Oj.dump(hash)
+          obj << serializer.dump(hash)
         end
         redis.hmset(data_key, *auto_incremented)
       end
@@ -73,6 +73,10 @@ module Findable
         else
           redis.hincrby(info_key, AUTO_INCREMENT_KEY, 1)
         end
+      end
+
+      def serializer
+        Findable.config.serializer
       end
   end
 end

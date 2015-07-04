@@ -2,6 +2,7 @@ module Findable
   class Configuration
     VALID_OPTIONS = [
       :redis_options,
+      :serializer,
       :seed_dir,
       :seed_file,
     ].freeze
@@ -27,6 +28,7 @@ module Findable
 
     def reset
       self.redis_options = nil
+      self.serializer = defined?(Oj) ? Oj : JSON
       self.seed_dir = defined?(Rails) ? Rails.root.join("db", "findable_seeds") : nil
       self.seed_file = defined?(Rails) ? Rails.root.join("db", "findable_seeds.rb") : nil
     end

@@ -2,6 +2,9 @@ Findable.configure do |config|
   # Redis connection setting. (default: `Redis.current`)
   # config.redis_options = {host: "localhost", port: 6379, db: 2}
 
+  # Serializer setting. Default is JSON but use Oj if Oj is installed.
+  # config.serializer = JSON
+
   # Directory of stored seed files.
   config.seed_dir = Rails.root.join("db", "findable_seeds")
 

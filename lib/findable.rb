@@ -2,7 +2,6 @@ require "active_support"
 require "active_support/core_ext"
 require "active_model"
 require "redis"
-require "oj"
 
 require "findable/version"
 require "findable/errors"

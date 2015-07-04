@@ -142,7 +142,7 @@ module Findable
     end
 
     def initialize(params = {})
-      params = Oj.load(params) if params.is_a?(String)
+      params = Findable.config.serializer.load(params) if params.is_a?(String)
       params.symbolize_keys!
       params.keys.each {|attr| self.class.define_field(attr) }
       @_attributes = params

@@ -22,7 +22,7 @@ describe Findable::Query do
 
   describe "#find_by_ids" do
     let(:raw_value) { read_model.query.find_by_ids(1) }
-    let(:loaded_value) { Oj.load(raw_value.first) }
+    let(:loaded_value) { Findable.config.serializer.load(raw_value.first) }
 
     it { expect(raw_value).to be_kind_of(Array) }
     it { expect(raw_value.first).to be_kind_of(String) }
