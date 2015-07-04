@@ -1,4 +1,5 @@
 require "findable/associations"
+require "findable/inspection"
 
 module Findable
   class Base
@@ -6,6 +7,7 @@ module Findable
     include ActiveModel::AttributeMethods
 
     include Associations
+    include Inspection
 
     attribute_method_suffix "="
     attribute_method_suffix "?"
