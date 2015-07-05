@@ -5,12 +5,8 @@ module Findable
       KEY_NAMES = %i(info data lock index).freeze
       AUTO_INCREMENT_KEY = :auto_increment
 
-      def initialize(model)
-        @_model = model
-      end
-
-      KEY_NAMES.each do |key|
-        define_method([key, "key"].join("_")) { namespaces[key] }
+      KEY_NAMES.each do |name|
+        define_method([name, "key"].join("_")) { namespaces[name] }
       end
 
       def thread_key
@@ -19,7 +15,7 @@ module Findable
 
       private
         def basename
-          @_model.model_name.plural
+          model.model_name.plural
         end
 
         # @return [Hash] namespaces

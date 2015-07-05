@@ -1,14 +1,22 @@
 require "findable/query/connection"
 require "findable/query/namespace"
 require "findable/query/lock"
+require "findable/query/serializer"
 
 module Findable
   class Query
     include Connection
     include Namespace
 
+    attr_reader :model
+
+    def initialize(model, serializer = nil)
+      @model = model
+      @serializer = serializer || Serializer.new
+    end
+
     def data
-      redis.hvals(data_key)
+      @serializer.deserialize(redis.hvals(data_key))
     end
 
     def ids
@@ -20,7 +28,7 @@ module Findable
     end
 
     def find_by_ids(ids)
-      redis.hmget(data_key, *Array(ids))
+      @serializer.deserialize(redis.hmget(data_key, *Array(ids)))
     end
 
     def exists?(id)
@@ -30,7 +38,7 @@ module Findable
     def insert(hash)
       lock do
         hash[:id] = auto_incremented_id(hash[:id])
-        redis.hset(data_key, hash[:id], serializer.dump(hash))
+        redis.hset(data_key, hash[:id], @serializer.serialize(hash))
       end
       hash
     end
@@ -40,14 +48,14 @@ module Findable
         auto_incremented = hashes.each_with_object([]) do |hash, obj|
           hash["id"] = auto_incremented_id(hash["id"])
           obj << hash["id"]
-          obj << serializer.dump(hash)
+          obj << @serializer.serialize(hash)
         end
         redis.hmset(data_key, *auto_incremented)
       end
     end
 
     def delete(id)
-      redis.hdel data_key, id
+      redis.hdel(data_key, id)
     end
 
     def delete_all
@@ -73,10 +81,6 @@ module Findable
         else
           redis.hincrby(info_key, AUTO_INCREMENT_KEY, 1)
         end
-      end
-
-      def serializer
-        Findable.config.serializer
       end
   end
 end

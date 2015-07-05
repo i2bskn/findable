@@ -4,7 +4,7 @@ describe Findable::Query::Namespace do
   include_context "TemporaryModel"
 
   before do
-    QueryEx = Class.new
+    QueryEx = Struct.new(:model)
     QueryEx.include Findable::Query::Namespace
   end
 
@@ -20,10 +20,6 @@ describe Findable::Query::Namespace do
         expect(query.public_send("#{name}_key")).to start_with(namespace::PREFIX)
       end
     }
-  end
-
-  describe "#initialize" do
-    it { expect(query.instance_eval { @_model }).to eq(model) }
   end
 
   describe "#thread_key" do

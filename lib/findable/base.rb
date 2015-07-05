@@ -18,7 +18,7 @@ module Findable
       def define_field(attr)
         unless public_method_defined?(attr)
           define_attribute_methods attr
-          define_method(attr) { attributes[attr.to_sym] }
+          define_method(attr) { attributes[attr] }
           column_names << attr.to_sym
         end
       end
@@ -76,6 +76,7 @@ module Findable
       end
 
       def where(conditions)
+        conditions.symbolize_keys!
         if id = conditions.delete(:id)
           values = find_by_ids(id).compact
           if conditions.empty?
@@ -142,8 +143,6 @@ module Findable
     end
 
     def initialize(params = {})
-      params = Findable.config.serializer.load(params) if params.is_a?(String)
-      params.symbolize_keys!
       params.keys.each {|attr| self.class.define_field(attr) }
       @_attributes = params
     end
@@ -180,7 +179,7 @@ module Findable
     alias_method :destroy, :delete
 
     def attributes
-      @_attributes ||= {}
+      @_attributes ||= ActiveSupport::HashWithIndifferentAccess.new
     end
 
     private

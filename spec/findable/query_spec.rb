@@ -21,12 +21,11 @@ describe Findable::Query do
   end
 
   describe "#find_by_ids" do
-    let(:raw_value) { read_model.query.find_by_ids(1) }
-    let(:loaded_value) { Findable.config.serializer.load(raw_value.first) }
+    let(:data) { read_model.query.find_by_ids(1) }
 
-    it { expect(raw_value).to be_kind_of(Array) }
-    it { expect(raw_value.first).to be_kind_of(String) }
-    it { expect(loaded_value[:id]).to eq(1) }
+    it { expect(data).to be_kind_of(Array) }
+    it { expect(data.first).to be_kind_of(ActiveSupport::HashWithIndifferentAccess) }
+    it { expect(data.first[:id]).to eq(1) }
   end
 
   describe "#exists?" do
