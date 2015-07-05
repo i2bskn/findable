@@ -33,13 +33,9 @@ module Findable
         @_column_names ||= [:id]
       end
 
-      def all
-        data.map {|val| new(val) }
-      end
-
       def find(ids)
-        if values = find_by_ids(ids).compact.presence
-          ids.is_a?(Array) ? values.map {|val| new(val) } : new(values.first)
+        if records = find_by_ids(ids).presence
+          ids.is_a?(Array) ? records : records.first
         else
           raise RecordNotFound.new(self, id: ids)
         end
@@ -49,25 +45,22 @@ module Findable
         if conditions.is_a?(Hash)
           conditions.symbolize_keys!
           if id = conditions.delete(:id)
-            values = find_by_ids(id).compact
+            records = find_by_ids(id)
             case
-            when values.empty? then nil
-            when conditions.empty? then new(values.first)
+            when records.empty? then nil
+            when conditions.empty? then records.first
             else
-              value = values.detect {|val|
-                record = new(val)
+              records.detect {|record|
                 conditions.all? {|k, v| record.public_send(k) == v }
               }
-              value ? new(value) : nil
             end
           else
-            all.detect {|r|
-              conditions.all? {|k, v| r.public_send(k) == v }
+            all.detect {|record|
+              conditions.all? {|k, v| record.public_send(k) == v }
             }
           end
         else
-          values = find_by_ids(conditions).compact
-          values.empty? ? nil : new(values.first)
+          find_by_ids(conditions).first
         end
       end
 
@@ -78,18 +71,17 @@ module Findable
       def where(conditions)
         conditions.symbolize_keys!
         if id = conditions.delete(:id)
-          values = find_by_ids(id).compact
+          records = find_by_ids(id)
           if conditions.empty?
-            values.map {|val| new(val) }
+            records
           else
-            values.map {|val|
-              record = new(val)
-              conditions.all? {|k, v| record.public_send(k) == v } ? record : nil
-            }.compact
+            records.select {|record|
+              conditions.all? {|k, v| record.public_send(k) == v }
+            }
           end
         else
-          all.select {|r|
-            conditions.all? {|k, v| r.public_send(k) == v }
+          all.select {|record|
+            conditions.all? {|k, v| record.public_send(k) == v }
           }
         end
       end
@@ -103,14 +95,13 @@ module Findable
 
       [:first, :last].each do |m|
         define_method(m) do
-          value = self.data.public_send(m)
-          value ? new(value) : nil
+          self.all.public_send(m)
         end
       end
 
       ## Query APIs
 
-      delegate :find_by_ids, :data, to: :query
+      delegate :find_by_ids, :all, to: :query
       delegate :count, :ids, :delete_all, to: :query
       alias_method :destroy_all, :delete_all
 

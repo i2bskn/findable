@@ -15,8 +15,8 @@ module Findable
       @serializer = serializer || Serializer.new
     end
 
-    def data
-      @serializer.deserialize(redis.hvals(data_key))
+    def all
+      @serializer.deserialize(redis.hvals(data_key), model)
     end
 
     def ids
@@ -28,7 +28,7 @@ module Findable
     end
 
     def find_by_ids(ids)
-      @serializer.deserialize(redis.hmget(data_key, *Array(ids)))
+      @serializer.deserialize(redis.hmget(data_key, *Array(ids)), model)
     end
 
     def exists?(id)

@@ -7,8 +7,8 @@ describe Findable::Query do
   let(:auto_increment_key) { Findable::Query::Namespace::AUTO_INCREMENT_KEY }
 
   describe "#data" do
-    it { expect(read_model.query.data).to be_kind_of(Array) }
-    it { expect(read_model.query.data.size).to eq(1) }
+    it { expect(read_model.query.all).to be_kind_of(Array) }
+    it { expect(read_model.query.all.size).to eq(1) }
   end
 
   describe "#ids" do
@@ -24,8 +24,8 @@ describe Findable::Query do
     let(:data) { read_model.query.find_by_ids(1) }
 
     it { expect(data).to be_kind_of(Array) }
-    it { expect(data.first).to be_kind_of(ActiveSupport::HashWithIndifferentAccess) }
-    it { expect(data.first[:id]).to eq(1) }
+    it { expect(data.first).to be_kind_of(read_model) }
+    it { expect(data.first.id).to eq(1) }
   end
 
   describe "#exists?" do
