@@ -34,12 +34,12 @@ describe Findable::Query do
   end
 
   describe "#insert" do
-    it { expect(model.query.insert(name: name)).to be_kind_of(Hash) }
-    it { expect(model.query.insert(name: name)[:id]).not_to be_nil }
-    it { expect(model.query.insert(name: name)[:name]).to eq(name) }
+    it { expect(model.create(name: name)).to be_kind_of(model) }
+    it { expect(model.create(name: name).id).not_to be_nil }
+    it { expect(model.create(name: name).name).to eq(name) }
     it {
       expect {
-        model.query.insert(name: name)
+        model.create(name: name)
       }.to change { model.query.count }.by(1)
     }
   end
@@ -48,18 +48,18 @@ describe Findable::Query do
   end
 
   describe "#delete" do
-    let!(:params) { model.query.insert(name: name) }
+    let!(:persisted_object) { model.create(name: name) }
 
     it {
       expect {
-        model.query.delete(params[:id])
+        model.query.delete(persisted_object.id)
       }.to change { model.query.count }.by(-1)
     }
   end
 
   describe "#delete_all" do
     before {
-      model.query.insert(name: name)
+      model.create(name: name)
       model.query.delete_all
     }
 

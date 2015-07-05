@@ -35,12 +35,16 @@ module Findable
       redis.hexists(data_key, id)
     end
 
-    def insert(hash)
+    def insert(object)
       lock do
-        hash[:id] = auto_incremented_id(hash[:id])
-        redis.hset(data_key, hash[:id], @serializer.serialize(hash))
+        object.id = auto_incremented_id(object.id)
+        redis.hset(
+          data_key,
+          object.id,
+          @serializer.serialize(object.attributes)
+        )
       end
-      hash
+      object
     end
 
     def import(hashes)

@@ -5,7 +5,6 @@ module Findable
   class Base
     include ActiveModel::Model
     include ActiveModel::AttributeMethods
-
     include Associations
     include Inspection
 
@@ -24,6 +23,8 @@ module Findable
       end
 
       ## ActiveRecord like APIs
+
+      delegate :all, to: :query
 
       def primary_key
         "id"
@@ -101,7 +102,7 @@ module Findable
 
       ## Query APIs
 
-      delegate :find_by_ids, :all, to: :query
+      delegate :find_by_ids, :insert, to: :query
       delegate :count, :ids, :delete_all, to: :query
       alias_method :destroy_all, :delete_all
 
@@ -111,10 +112,6 @@ module Findable
         else
           false
         end
-      end
-
-      def insert(obj)
-        query.insert(obj.attributes)
       end
 
       def delete(obj)
@@ -134,6 +131,7 @@ module Findable
     end
 
     def initialize(params = {})
+      params = params.with_indifferent_access
       params.keys.each {|attr| self.class.define_field(attr) }
       @_attributes = params
     end
@@ -159,8 +157,7 @@ module Findable
     end
 
     def save
-      @_attributes = self.class.insert(self)
-      self
+      self.class.insert(self)
     end
     alias_method :save!, :save
 
@@ -173,13 +170,12 @@ module Findable
       @_attributes ||= ActiveSupport::HashWithIndifferentAccess.new
     end
 
-    private
-      def attribute=(attr, value)
-        attributes[attr.to_sym] = value
-      end
+    def attribute=(attr, value)
+      attributes[attr.to_sym] = value
+    end
 
-      def attribute?(attr)
-        attributes[attr.to_sym].present?
-      end
+    def attribute?(attr)
+      attributes[attr.to_sym].present?
+    end
   end
 end

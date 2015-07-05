@@ -4,7 +4,12 @@ module Findable
 
     module ClassMethods
       def inspect
-        "#{self}(#{column_names.map(&:inspect).join(', ')})"
+        case
+        when self == Findable::Base
+          super
+        else
+          "#{self}(#{column_names.map(&:inspect).join(', ')})"
+        end
       end
     end
 
