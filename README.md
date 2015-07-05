@@ -1,15 +1,15 @@
 # Findable
 
 [![Gem Version](https://badge.fury.io/rb/findable.svg)](http://badge.fury.io/rb/findable)
-[![Build Status](https://travis-ci.org/i2bskn/findable.svg)](https://travis-ci.org/i2bskn/findable)
-[![Coverage Status](https://img.shields.io/coveralls/i2bskn/findable.svg)](https://coveralls.io/r/i2bskn/findable)
+[![Build Status](https://travis-ci.org/i2bskn/findable.svg?branch=master)](https://travis-ci.org/i2bskn/findable)
+[![Coverage Status](https://coveralls.io/repos/i2bskn/findable/badge.svg?branch=master)](https://coveralls.io/r/i2bskn/findable?branch=master)
 [![Code Climate](https://codeclimate.com/github/i2bskn/findable/badges/gpa.svg)](https://codeclimate.com/github/i2bskn/findable)
 
 Redis wrapper with API like ActiveRecord.
 
 ## Requirements
 
-- Redis
+- Redis 2.8 or later
 
 ## Installation
 
@@ -64,7 +64,7 @@ end
 Execute seed script if you create seed files.
 
 ```
-$ rake findable:seeds
+$ rake findable:seed
 ```
 
 Manipulate data with API like ActiveRecord.
@@ -72,13 +72,13 @@ Manipulate data with API like ActiveRecord.
 ```
 $ rails console
 pry(main)> Tag.find(1)
-=> #<Tag:0x00000108068430 @_attributes={:id=>1, :name=>"Ruby"}>
+=> #<Tag id: 1, name: "Ruby">
 pry(main)> golang = Tag.create(name: "Go")
-=> #<Tag:0x00000107ff6420 @_attributes={:name=>"Go", :id=>2}>
+=> #<Tag id: 2, name: "Go">
 pry(main)> Tag.all.each {|tag| p tag.name }
 "Ruby"
 "Go"
-=> [#<Tag:0x00000107f49568 @_attributes={:id=>1, :name=>"Ruby"}>, #<Tag:0x00000107f492e8 @_attributes={:name=>"Go", :id=>2}>]
+=> [#<Tag id: 1, name: "Ruby">, #<Tag id: 2, name: "Go">]
 ```
 
 ## Associations
