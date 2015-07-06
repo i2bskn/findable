@@ -9,7 +9,7 @@ describe Findable::Associations do
   let(:other_company) { Company.last }
 
   describe "#has_many" do
-    it { expect(category.products).to be_kind_of(Array) }
+    it { expect(category.products).to be_kind_of(Findable::Collection) }
     it { expect(category.products.first).to be_kind_of(Product) }
     it { expect(user.pictures).to be_kind_of(ActiveRecord::Relation) }
     it { expect(user.pictures.first).to be_kind_of(Picture) }

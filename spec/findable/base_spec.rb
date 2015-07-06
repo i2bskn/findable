@@ -13,13 +13,13 @@ describe Findable::Base do
   end
 
   describe ".all" do
-    it { expect(read_model.all).to be_kind_of(Array) }
+    it { expect(read_model.all).to be_kind_of(Findable::Collection) }
     it { expect(read_model.all.size).to eq(1) }
   end
 
   describe ".find" do
     it { expect(read_model.find(id)).to be_kind_of(read_model) }
-    it { expect(read_model.find([id])).to be_kind_of(Array) }
+    it { expect(read_model.find([id])).to be_kind_of(Findable::Collection) }
     it {
       expect {
         read_model.find(invalid_id)
@@ -52,13 +52,13 @@ describe Findable::Base do
   end
 
   describe ".where" do
-    it { expect(read_model.where(id: id)).to be_kind_of(Array) }
+    it { expect(read_model.where(id: id)).to be_kind_of(Findable::Collection) }
     it { expect(read_model.where(id: id).first).to be_kind_of(read_model) }
     it { expect(read_model.where(id: invalid_id)).to be_empty }
-    it { expect(read_model.where(id: id, name: name)).to be_kind_of(Array) }
+    it { expect(read_model.where(id: id, name: name)).to be_kind_of(Findable::Collection) }
     it { expect(read_model.where(id: id, name: name).first).to be_kind_of(read_model) }
     it { expect(read_model.where(id: invalid_id, name: name)).to be_empty }
-    it { expect(read_model.where(name: name)).to be_kind_of(Array) }
+    it { expect(read_model.where(name: name)).to be_kind_of(Findable::Collection) }
     it { expect(read_model.where(name: name).first).to be_kind_of(read_model) }
     it { expect(read_model.where(name: invalid_name)).to be_empty }
   end

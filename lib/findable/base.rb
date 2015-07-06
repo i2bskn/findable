@@ -24,7 +24,8 @@ module Findable
 
       ## ActiveRecord like APIs
 
-      delegate :all, to: :query
+      delegate :first, :last, to: :all
+      alias_method :take, :first
 
       def primary_key
         "id"
@@ -34,11 +35,15 @@ module Findable
         @_column_names ||= [:id]
       end
 
+      def all
+        collection!(query.all)
+      end
+
       def find(ids)
         if records = find_by_ids(ids).presence
-          ids.is_a?(Array) ? records : records.first
+          ids.is_a?(Array) ? collection!(records) : records.first
         else
-          raise RecordNotFound.new(self, id: ids)
+          raise not_found(id: ids)
         end
       end
 
@@ -56,9 +61,7 @@ module Findable
               }
             end
           else
-            all.detect {|record|
-              conditions.all? {|k, v| record.public_send(k) == v }
-            }
+            all.find_by(conditions.dup)
           end
         else
           find_by_ids(conditions).first
@@ -66,7 +69,7 @@ module Findable
       end
 
       def find_by!(conditions)
-        find_by(conditions.dup) || (raise RecordNotFound.new(self, conditions))
+        find_by(conditions.dup) || (raise not_found(conditions))
       end
 
       def where(conditions)
@@ -74,16 +77,14 @@ module Findable
         if id = conditions.delete(:id)
           records = find_by_ids(id)
           if conditions.empty?
-            records
+            collection!(records)
           else
-            records.select {|record|
+            collection!(records.select {|record|
               conditions.all? {|k, v| record.public_send(k) == v }
-            }
+            })
           end
         else
-          all.select {|record|
-            conditions.all? {|k, v| record.public_send(k) == v }
-          }
+          all.where(conditions.dup)
         end
       end
 
@@ -93,12 +94,6 @@ module Findable
         record
       end
       alias_method :create!, :create
-
-      [:first, :last].each do |m|
-        define_method(m) do
-          self.all.public_send(m)
-        end
-      end
 
       ## Query APIs
 
@@ -125,6 +120,14 @@ module Findable
       end
 
       private
+        def collection!(records)
+          records.is_a?(Array) ? Collection.new(self, records) : records
+        end
+
+        def not_found(params)
+          RecordNotFound.new(self, params)
+        end
+
         def id_from(obj)
           obj.is_a?(self) ? obj.id : obj.to_i
         end

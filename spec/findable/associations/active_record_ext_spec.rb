@@ -7,7 +7,7 @@ describe Findable::Associations::ActiveRecordExt do
   let(:user) { User.first }
 
   describe "#has_many" do
-    it { expect(company.users).to be_kind_of(Array) }
+    it { expect(company.users).to be_kind_of(Findable::Collection) }
     it { expect(company.users.first).to be_kind_of(User) }
     it { expect(company.stores).to be_kind_of(ActiveRecord::Relation) }
     it { expect(company.stores.first).to be_kind_of(Store) }
