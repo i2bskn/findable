@@ -58,10 +58,24 @@ module Findable
       })
     end
 
-    def order(*args)
+    def order(*columns)
+      columns.flatten!
+      raise ArgumentError, "Must contain arguments" if columns.empty?
+
       regenerate(records.sort_by {|record|
-        args.map {|name| record.public_send(name) }
+        columns.map {|column| record.public_send(column) }
       })
+    end
+
+    def pluck(*columns)
+      columns.flatten!
+      return records.map {|record| record.attributes.values } if columns.empty?
+      single = (columns.size == 1)
+
+      records.map {|record|
+        values = columns.map {|column| record.public_send(column) }
+        single ? values.first : values
+      }
     end
 
     def inspect
