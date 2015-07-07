@@ -24,7 +24,7 @@ module Findable
 
       ## ActiveRecord like APIs
 
-      delegate :first, :last, to: :all
+      delegate :first, :last, :order, to: :all
       alias_method :take, :first
 
       def primary_key

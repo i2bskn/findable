@@ -58,6 +58,12 @@ module Findable
       })
     end
 
+    def order(*args)
+      regenerate(records.sort_by {|record|
+        args.map {|name| record.public_send(name) }
+      })
+    end
+
     def inspect
       "[#{records.map(&:inspect).join(",\n")}]"
     end

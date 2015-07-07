@@ -3,7 +3,7 @@
 # =========================
 
 # Initialize Redis
-Redis.current.flushdb
+Findable::Base.query.redis.flushdb
 
 # Initialize SQLite
 ActiveRecord::Base.establish_connection({
