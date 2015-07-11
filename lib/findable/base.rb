@@ -12,6 +12,10 @@ module Findable
     attribute_method_suffix "?"
 
     class << self
+      def arel_table
+        raise NotActiveRecord.new(self)
+      end
+
       ## field definitions
 
       def define_field(attr)

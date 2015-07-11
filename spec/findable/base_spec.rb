@@ -14,7 +14,7 @@ describe Findable::Base do
 
   describe ".all" do
     it { expect(read_model.all).to be_kind_of(Findable::Collection) }
-    it { expect(read_model.all.size).to eq(1) }
+    it { expect(read_model.all.size).to eq(CategoryData.size) }
   end
 
   describe ".find" do

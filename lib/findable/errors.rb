@@ -8,5 +8,11 @@ module Findable
     end
   end
 
+  class NotActiveRecord < FindableError
+    def initialize(model)
+      super("#{model.model_name.name} class is not ActiveRecord")
+    end
+  end
+
   class LockTimeout < FindableError; end
 end

@@ -57,6 +57,15 @@ module Findable
             Utils.add_reflection(:belongs_to, name.to_sym, options, self)
           else
             super
+            define_method("#{name}_with_findable_polymorphic") do
+              begin
+                public_send("#{name}_without_findable_polymorphic")
+              rescue NotActiveRecord
+                id = public_send("#{name}_id")
+                public_send("#{name}_type").constantize.find(id)
+              end
+            end
+            alias_method_chain name.to_sym, :findable_polymorphic
           end
         end
       end
