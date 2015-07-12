@@ -1,4 +1,5 @@
 require "findable/associations"
+require "findable/schema"
 require "findable/inspection"
 
 module Findable
@@ -6,24 +7,12 @@ module Findable
     include ActiveModel::Model
     include ActiveModel::AttributeMethods
     include Associations
+    include Schema
     include Inspection
-
-    attribute_method_suffix "="
-    attribute_method_suffix "?"
 
     class << self
       def arel_table
         raise NotActiveRecord.new(self)
-      end
-
-      ## field definitions
-
-      def define_field(attr)
-        unless public_method_defined?(attr)
-          define_attribute_methods attr
-          define_method(attr) { attributes[attr] }
-          column_names << attr.to_sym
-        end
       end
 
       ## ActiveRecord like APIs
@@ -33,10 +22,6 @@ module Findable
 
       def primary_key
         "id"
-      end
-
-      def column_names
-        @_column_names ||= [:id]
       end
 
       def all
@@ -175,14 +160,6 @@ module Findable
 
     def attributes
       @_attributes ||= ActiveSupport::HashWithIndifferentAccess.new
-    end
-
-    def attribute=(attr, value)
-      attributes[attr.to_sym] = value
-    end
-
-    def attribute?(attr)
-      attributes[attr.to_sym].present?
     end
   end
 end
