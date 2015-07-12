@@ -17,8 +17,11 @@ module Findable
 
         def add_type!(type)
           return type if type.respond_to?(:call)
-          raise ArgumentError unless private_method_defined?(type)
           types[type.to_sym] = method(type)
+        end
+
+        def clear_types
+          @_types = nil
         end
 
         private
@@ -58,7 +61,7 @@ module Findable
             if value.is_a?(Time) || value.is_a?(ActiveSupport::TimeWithZone)
               return value
             end
-            Time.zone.parse(value)
+            (Time.zone || Time).parse(value)
           end
 
           def symbol(value)

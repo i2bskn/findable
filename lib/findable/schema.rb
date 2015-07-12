@@ -19,7 +19,7 @@ module Findable
         name = args.first
         if !public_method_defined?(name) || options.present?
           define_attribute_methods name
-          conversion = Conversion.for(options[:type])
+          conversion = Findable::Schema::Conversion.for(options[:type])
           define_method(name) { conversion.call(attributes[name.to_sym]) }
           column_names << name.to_sym
         end
