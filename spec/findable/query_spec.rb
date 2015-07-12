@@ -8,16 +8,16 @@ describe Findable::Query do
 
   describe "#data" do
     it { expect(read_model.query.all).to be_kind_of(Array) }
-    it { expect(read_model.query.all.size).to eq(1) }
+    it { expect(read_model.query.all.size).to eq(CategoryData.size) }
   end
 
   describe "#ids" do
     it { expect(read_model.query.ids).to be_kind_of(Array) }
-    it { expect(read_model.query.ids).to eq([1]) }
+    it { expect(read_model.query.ids).to eq(CategoryData.map {|h| h[:id]}) }
   end
 
   describe "#count" do
-    it { expect(read_model.query.count).to eq(1) }
+    it { expect(read_model.query.count).to eq(CategoryData.size) }
   end
 
   describe "#find_by_ids" do
@@ -30,7 +30,7 @@ describe Findable::Query do
 
   describe "#exists?" do
     it { expect(read_model.exists?(1)).to be_truthy }
-    it { expect(read_model.exists?(2)).to be_falsey }
+    it { expect(read_model.exists?(100)).to be_falsey }
   end
 
   describe "#insert" do

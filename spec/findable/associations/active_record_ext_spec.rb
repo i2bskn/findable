@@ -1,29 +1,32 @@
 require "spec_helper"
 
 describe Findable::Associations::ActiveRecordExt do
-  let(:company) { Company.first }
-  let(:store) { Store.first }
-  let(:email) { Email.first }
+  # ActiveRecord models
   let(:user) { User.first }
+  let(:user2) { User.second }
+  let(:status) { Status.take }
+
+  # Findable models
+  let(:image) { Image.take }
 
   describe "#has_many" do
-    it { expect(company.users).to be_kind_of(Array) }
-    it { expect(company.users.first).to be_kind_of(User) }
-    it { expect(company.stores).to be_kind_of(ActiveRecord::Relation) }
-    it { expect(company.stores.first).to be_kind_of(Store) }
+    it { expect(user.purchase_histories).to be_kind_of(Findable::Collection) }
+    it { expect(user.purchase_histories.first).to be_kind_of(PurchaseHistory) }
+    it { expect(user.comments).to be_kind_of(ActiveRecord::Relation) }
+    it { expect(user.comments.first).to be_kind_of(Comment) }
   end
 
   describe "#has_one" do
-    it { expect(company.image).to be_kind_of(Image) }
-    it { expect(store.email).to be_kind_of(Email) }
+    it { expect(user.image).to be_kind_of(Image) }
+    it { expect(user.status).to be_kind_of(Status) }
   end
 
   describe "#belongs_to" do
-    it { expect(email.user).to be_kind_of(User) }
-    it { expect(store.company).to be_kind_of(Company) }
+    it { expect(image.user).to be_kind_of(User) }
+    it { expect(status.user).to be_kind_of(User) }
     it {
-      email.user = user
-      expect(email.user_id).to eq(user.id)
+      image.user = user2
+      expect(image).to have_attributes(user_id: user2.id)
     }
   end
 end
