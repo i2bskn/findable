@@ -45,10 +45,8 @@ module Findable
           def boolean(value)
             if value.is_a?(TrueClass) || value.is_a?(FalseClass)
               value
-            elsif value.in?(FALSE_VALUE)
-              false
             else
-              !!value
+              value.in?(FALSE_VALUE) ? false : !!value
             end
           end
 

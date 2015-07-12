@@ -11,7 +11,7 @@ describe Findable::Associations::Utils do
     it { expect(utils.model_for(model_name.plural, collection: true)).to eq(model) }
     it { expect(utils.model_for("invalid", class_name: model_name.name)).to eq(model) }
 
-    it { expect { utils.model_for("invalid") }.to raise_error }
+    it { expect { utils.model_for("invalid") }.to raise_error(NameError) }
     it { expect { utils.model_for("invalid", safe: true) }.not_to raise_error }
     it { expect(utils.model_for("invalid", safe: true)).to be_nil }
   end

@@ -55,7 +55,7 @@ describe Findable::Configuration do
       it {
         expect {
           Findable.configure {|config| config.unknown = :value }
-        }.to raise_error
+        }.to raise_error(NoMethodError)
       }
     end
 
