@@ -1,4 +1,5 @@
 require "json"
+require "bigdecimal"
 
 require "active_support"
 require "active_support/core_ext"

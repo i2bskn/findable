@@ -1,3 +1,5 @@
+require "findable/associations/utils"
+
 module Findable
   module Associations
     module ActiveRecordExt
