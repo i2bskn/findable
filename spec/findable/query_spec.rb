@@ -52,7 +52,7 @@ describe Findable::Query do
 
     it {
       expect {
-        model.query.delete(persisted_object.id)
+        model.query.delete(persisted_object)
       }.to change { model.query.count }.by(-1)
     }
   end

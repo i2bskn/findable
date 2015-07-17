@@ -63,7 +63,7 @@ module Findable
           obj << hash["id"]
           obj << @serializer.serialize(hash)
 
-          if model.indexes.size > 1
+          if model.index_defined?
             model.indexes.each_with_object([]) do |name, obj|
               next if name == :id
               indexes[[name, hash[name]].join(":")] << hash["id"]
@@ -78,13 +78,22 @@ module Findable
       end
     end
 
-    def delete(id)
-      redis.hdel(data_key, id)
+    def delete(object)
+      if model.index_defined?
+        model.indexes.each do |name|
+          next if name == :id
+          if value = object.public_send("#{name}_was") || object.public_send(name)
+            redis.hdel(index_key, value)
+          end
+        end
+      end
+
+      redis.hdel(data_key, object.id)
     end
 
     def delete_all
       redis.multi do
-        [data_key, info_key].each {|key| redis.del(key) }
+        [data_key, info_key, index_key].each {|key| redis.del(key) }
       end
     end
 
@@ -94,7 +103,7 @@ module Findable
     end
 
     def update_index(object)
-      if model.indexes.size > 1
+      if model.index_defined?
         indexes = model.indexes.each_with_object([]) {|name, obj|
           next if name == :id || object.public_send("#{name}_changed?")
 

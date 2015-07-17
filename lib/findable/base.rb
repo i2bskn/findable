@@ -38,8 +38,14 @@ module Findable
       def find_by(conditions)
         if conditions.is_a?(Hash)
           conditions.symbolize_keys!
-          if id = conditions.delete(:id)
-            records = find_by_ids(id)
+          if index = conditions.keys.detect {|key| key.in?(indexes) }
+            value = conditions.delete(index)
+            if index == :id
+              records = find_by_ids(value)
+            else
+              records = find_by_index(index, value)
+            end
+
             case
             when records.empty? then nil
             when conditions.empty? then records.first
@@ -62,8 +68,14 @@ module Findable
 
       def where(conditions)
         conditions.symbolize_keys!
-        if id = conditions.delete(:id)
-          records = find_by_ids(id)
+        if index = conditions.keys.detect {|key| key.in?(indexes) }
+          value = conditions.delete(index)
+          if index == :id
+            records = find_by_ids(value)
+          else
+            records = find_by_index(index, value)
+          end
+
           if conditions.empty?
             collection!(records)
           else
@@ -85,8 +97,8 @@ module Findable
 
       ## Query APIs
 
-      delegate :find_by_ids, :insert, to: :query
-      delegate :count, :ids, :delete_all, to: :query
+      delegate :find_by_ids, :find_by_index, :insert, to: :query
+      delegate :count, :ids, :delete, :delete_all, to: :query
       alias_method :destroy_all, :delete_all
 
       def exists?(obj)
@@ -94,12 +106,6 @@ module Findable
           query.exists?(_id)
         else
           false
-        end
-      end
-
-      def delete(obj)
-        if _id = id_from(obj)
-          query.delete(_id)
         end
       end
 

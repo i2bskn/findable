@@ -21,6 +21,10 @@ module Findable
         @_indexes ||= [:id]
       end
 
+      def index_defined?
+        indexes.size > 1
+      end
+
       def define_field(*args)
         options = args.extract_options!
         name = args.first
