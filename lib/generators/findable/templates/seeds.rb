@@ -10,4 +10,4 @@ require "findable/seed"
 seed_files = nil
 
 # Execute
-Findable::Seed.target_files(seed_files: seed_files).each {|seed| seed.bootstrap! }
+Findable::Seed.target_files(seed_files: seed_files).each(&:bootstrap!)
