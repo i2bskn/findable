@@ -6,7 +6,7 @@ module Findable
 
         def for(type)
           return types[:default] if type.nil?
-          types[type] || add_type!(type)
+          types[type.to_sym] || add_type!(type)
         end
 
         def types
@@ -16,8 +16,8 @@ module Findable
         end
 
         def add_type!(type)
-          return type if type.respond_to?(:call)
-          types[type.to_sym] = method(type)
+          return type if type.is_a?(Proc)
+          types[type.to_sym] = method(type).to_proc
         end
 
         def clear_types
