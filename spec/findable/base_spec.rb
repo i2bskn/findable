@@ -125,12 +125,12 @@ describe Findable::Base do
 
   # Private instance methods
   describe "#attribute=" do
-    before { instance.send(:attribute=, :example, "value") }
-    it { expect(instance.attributes[:example]).to eq("value") }
+    before { instance.send(:attribute=, :name, "value") }
+    it { expect(instance.attributes[:name]).to eq("value") }
   end
 
   describe "#attribute?" do
-    before { instance.send(:attribute=, :example, "value") }
-    it { expect(instance.send(:attribute?, :example)).to be_truthy }
+    before { instance.send(:attribute=, :name, "value") }
+    it { expect(instance.send(:attribute?, :name)).to be_truthy }
   end
 end

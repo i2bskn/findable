@@ -1,6 +1,6 @@
 module Findable
   module Associations
-    class Utils
+    module Utils
       def self.model_for(name, options = {})
         unless model_name = options[:class_name].presence
           name = options[:collection] ? name.to_s.singularize : name.to_s

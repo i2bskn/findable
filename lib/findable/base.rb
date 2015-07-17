@@ -5,7 +5,6 @@ require "findable/inspection"
 module Findable
   class Base
     include ActiveModel::Model
-    include ActiveModel::AttributeMethods
     include Associations
     include Schema
     include Inspection

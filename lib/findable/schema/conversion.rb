@@ -1,10 +1,10 @@
 module Findable
   module Schema
-    class Conversion
+    module Conversion
       class << self
         FALSE_VALUE = ["false", "0"]
 
-        def for(type)
+        def to(type)
           return types[:default] if type.nil?
           types[type.to_sym] || add_type!(type)
         end

@@ -4,17 +4,17 @@ describe Findable::Schema::Conversion do
   after(:each) { conversion.clear_types }
   let(:conversion) { Findable::Schema::Conversion }
 
-  describe ".for" do
-    it { expect(conversion.for(nil)).to eq(conversion.types[:default]) }
-    it { expect(conversion.for(:integer)).to eq(conversion.types[:integer]) }
-    it { expect(conversion.for(:float)).to eq(conversion.types[:float]) }
-    it { expect(conversion.for(:decimal)).to eq(conversion.types[:decimal]) }
-    it { expect(conversion.for(:string)).to eq(conversion.types[:string]) }
-    it { expect(conversion.for(:boolean)).to eq(conversion.types[:boolean]) }
-    it { expect(conversion.for(:date)).to eq(conversion.types[:date]) }
-    it { expect(conversion.for(:datetime)).to eq(conversion.types[:datetime]) }
-    it { expect(conversion.for(:symbol)).to eq(conversion.types[:symbol]) }
-    it { expect(conversion.for(:inquiry)).to eq(conversion.types[:inquiry]) }
+  describe ".to" do
+    it { expect(conversion.to(nil)).to eq(conversion.types[:default]) }
+    it { expect(conversion.to(:integer)).to eq(conversion.types[:integer]) }
+    it { expect(conversion.to(:float)).to eq(conversion.types[:float]) }
+    it { expect(conversion.to(:decimal)).to eq(conversion.types[:decimal]) }
+    it { expect(conversion.to(:string)).to eq(conversion.types[:string]) }
+    it { expect(conversion.to(:boolean)).to eq(conversion.types[:boolean]) }
+    it { expect(conversion.to(:date)).to eq(conversion.types[:date]) }
+    it { expect(conversion.to(:datetime)).to eq(conversion.types[:datetime]) }
+    it { expect(conversion.to(:symbol)).to eq(conversion.types[:symbol]) }
+    it { expect(conversion.to(:inquiry)).to eq(conversion.types[:inquiry]) }
   end
 
   describe ".types" do
