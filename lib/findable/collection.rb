@@ -67,6 +67,11 @@ module Findable
       })
     end
 
+    def ordered_find(*_ids)
+      _ids.flatten!
+      records.index_by(&:id).values_at(*_ids)
+    end
+
     def pluck(*columns)
       columns.flatten!
       return records.map {|record| record.attributes.values } if columns.empty?

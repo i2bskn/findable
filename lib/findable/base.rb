@@ -95,6 +95,13 @@ module Findable
       end
       alias_method :create!, :create
 
+      ## Extension
+
+      def ordered_find(*_ids)
+        _ids.flatten!
+        find(_ids).ordered_find(_ids)
+      end
+
       ## Query APIs
 
       delegate :find_by_ids, :find_by_index, :insert, to: :query
