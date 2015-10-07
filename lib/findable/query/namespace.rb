@@ -13,6 +13,10 @@ module Findable
         [PREFIX, basename].join("_")
       end
 
+      def script_keys
+        [data_key, info_key, index_key]
+      end
+
       private
         def basename
           model.model_name.plural

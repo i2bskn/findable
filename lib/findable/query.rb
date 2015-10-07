@@ -1,6 +1,7 @@
 require "findable/query/connection"
 require "findable/query/namespace"
 require "findable/query/lock"
+require "findable/script"
 
 module Findable
   class Query
@@ -41,12 +42,11 @@ module Findable
 
     def insert(object)
       lock do
-        object.id = auto_incremented_id(object.id)
-        redis.hset(
-          data_key,
-          object.id,
-          object.attributes.to_msgpack
+        packed_objects = Script.insert.execute(
+          script_keys,
+          [object.id || "auto", object.attributes.to_msgpack],
         )
+        object.attributes.merge!(MessagePack.unpack(packed_objects.first))
         update_index(object)
       end
       object
