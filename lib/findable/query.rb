@@ -1,7 +1,6 @@
 require "findable/query/connection"
 require "findable/query/namespace"
 require "findable/query/lock"
-require "findable/query/serializer"
 
 module Findable
   class Query
@@ -10,13 +9,12 @@ module Findable
 
     attr_reader :model
 
-    def initialize(model, serializer = nil)
+    def initialize(model)
       @model = model
-      @serializer = serializer || Serializer.new
     end
 
     def all
-      @serializer.deserialize(redis.hvals(data_key), model)
+      deserialize(redis.hvals(data_key), model)
     end
 
     def ids
@@ -28,7 +26,7 @@ module Findable
     end
 
     def find_by_ids(ids)
-      @serializer.deserialize(redis.hmget(data_key, *Array(ids)), model)
+      deserialize(redis.hmget(data_key, *Array(ids)), model)
     end
 
     def find_by_index(index, value)
@@ -47,7 +45,7 @@ module Findable
         redis.hset(
           data_key,
           object.id,
-          @serializer.serialize(object.attributes)
+          object.attributes.to_msgpack
         )
         update_index(object)
       end
@@ -61,7 +59,7 @@ module Findable
           hash = hash.with_indifferent_access
           hash["id"] = auto_incremented_id(hash["id"])
           obj << hash["id"]
-          obj << @serializer.serialize(hash)
+          obj << hash.to_msgpack
 
           if model.index_defined?
             model.indexes.each_with_object([]) do |name, obj|
@@ -72,7 +70,7 @@ module Findable
         end
         redis.hmset(data_key, *values)
         if indexes.present?
-          attrs = indexes.map {|k, v| [k, @serializer.serialize(v)] }.flatten
+          attrs = indexes.map {|k, v| [k, v.to_msgpack] }.flatten
           redis.hmset(index_key, *attrs)
         end
       end
@@ -116,7 +114,7 @@ module Findable
                 redis.hdel(index_key, old_index_key)
               else
                 obj << old_index_key
-                obj << @serializer.serialize(new_ids)
+                obj << new_ids.to_msgpack
               end
             end
           end
@@ -144,8 +142,17 @@ module Findable
 
       def ids_from_index(index_name)
         if ids = redis.hget(index_key, index_name)
-          @serializer.deserialize(ids)
+          deserialize(ids)
         end
+      end
+
+      def deserialize(raw_data, klass = nil)
+        objects = Array(raw_data).compact.map {|data|
+          object = MessagePack.unpack(data)
+          object = object.with_indifferent_access if object.is_a?(Hash)
+          klass ? klass.new(object) : object
+        }
+        raw_data.is_a?(String) ? objects.first : objects
       end
   end
 end

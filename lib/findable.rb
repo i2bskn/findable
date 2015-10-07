@@ -1,10 +1,10 @@
-require "json"
 require "bigdecimal"
 
 require "active_support"
 require "active_support/core_ext"
 require "active_model"
 require "redis"
+require "msgpack"
 
 require "findable/version"
 require "findable/errors"
