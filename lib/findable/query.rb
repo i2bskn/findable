@@ -41,14 +41,8 @@ module Findable
     end
 
     def insert(object)
-      lock do
-        packed_objects = Script.insert.execute(
-          script_keys,
-          [object.id || "auto", object.attributes.to_msgpack],
-        )
-        object.attributes.merge!(MessagePack.unpack(packed_objects.first))
-        update_index(object)
-      end
+      packed_objects = Script.insert.execute(eval_keys, eval_arguments(object))
+      object.attributes.merge!(MessagePack.unpack(packed_objects.first))
       object
     end
 
@@ -144,6 +138,17 @@ module Findable
         if ids = redis.hget(index_key, index_name)
           deserialize(ids)
         end
+      end
+
+      def eval_keys
+        [data_key, model.secondary_indexes].flatten
+      end
+
+      def eval_arguments(object)
+        [
+          object.id || "auto".freeze,
+          object.attributes.to_msgpack,
+        ]
       end
 
       def deserialize(raw_data, klass = nil)

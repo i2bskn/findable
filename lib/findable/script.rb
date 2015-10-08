@@ -37,10 +37,10 @@ module Findable
     end
 
     def execute(keys, argv)
-      Redis.current.evalsha(sha, Array(keys), Array(argv))
+      redis.evalsha(sha, Array(keys), Array(argv))
     rescue Redis::CommandError => e
       if e.message =~ /NOSCRIPT/
-        Redis.current.eval(script, Array(keys), Array(argv))
+        redis.eval(script, Array(keys), Array(argv))
       else
         raise
       end
