@@ -2,7 +2,8 @@ module Findable
   class Query
     module Namespace
       PREFIX = "findable"
-      META_NAMES = %i(info index lock thread)
+      META_NAMES = %i(info lock thread)
+      DELIMITER = ":"
       AUTO_INCREMENT_KEY = :auto_increment # TODO: delete
 
       META_NAMES.each do |name|
@@ -10,7 +11,12 @@ module Findable
       end
 
       def data_key
-        @_data_key ||= [PREFIX, basename].join(":")
+        @_data_key ||= [PREFIX, basename].join(DELIMITER)
+      end
+
+      def index_key(column)
+        @_index_base ||= [data_key, "index"].join(DELIMITER)
+        [@_index_base, column].join(DELIMITER)
       end
 
       private
@@ -21,7 +27,7 @@ module Findable
         # @return [Hash] namespaces
         def namespaces
           @_namespaces ||= META_NAMES.each_with_object({}) {|key, obj|
-            obj[key] = [data_key, key].join(":")
+            obj[key] = [data_key, key].join(DELIMITER)
           }
         end
     end

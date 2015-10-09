@@ -41,8 +41,8 @@ module Findable
     end
 
     def insert(object)
-      packed_objects = Script.insert.execute(eval_keys, eval_arguments(object))
-      object.attributes.merge!(MessagePack.unpack(packed_objects.first))
+      hashes = script_insert([object.attributes])
+      object.attributes.merge!(hashes.first)
       object
     end
 
@@ -120,6 +120,14 @@ module Findable
       end
     end
 
+    # Script API
+    def script_insert(array_of_hashes)
+      eval_arguments = array_of_hashes.map(&:to_msgpack)
+      Script.insert.execute(eval_keys, eval_arguments).map {|packed|
+        MessagePack.unpack(packed)
+      }
+    end
+
     private
       def auto_incremented_id(id)
         if id.present?
@@ -141,14 +149,11 @@ module Findable
       end
 
       def eval_keys
-        [data_key, model.secondary_indexes].flatten
-      end
-
-      def eval_arguments(object)
         [
-          object.id || "auto".freeze,
-          object.attributes.to_msgpack,
-        ]
+          data_key,
+          info_key,
+          model.secondary_indexes.map {|idx| index_key(idx) },
+        ].flatten
       end
 
       def deserialize(raw_data, klass = nil)

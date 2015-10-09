@@ -1,87 +1,100 @@
 --[[
 
 insert.lua
-* Insert and update script of evalsha.
+* Findable data insert and update script of evalsha.
 
 @Author  Ken Iiboshi
 @Licence MIT
+@URL     https://github.com/i2bskn/findable
 
 @Arguments
-* KEY[1]     Table name of data hash.
-* KEY[2..n]  Index column name.
-* ARGV[1..n] Unique id and packed data with MessagePack format.
-             ex [id(unique), data(packed), id, data...]
+* KEYS[1]    Data hash name.
+* KEYS[2]    Info hash name.
+* KEYS[3..n] Index hash names.
+* ARGV[1..n] Packed data with MessagePack format.
+
+@Return [Packed hash, Packed hash...]
 
 ]]
 
--- Functions
-local function update_index(base, columns, unpacked)
-  if #columns > 0 then
-    for i = 1, #columns do
-      local name = columns[i]
-      local index_key = base .. name
+assert(#KEYS >= 2)
+assert(#ARGV > 0)
 
-      if unpacked[name] then
-        redis.call("HSET", index_key, unpacked[name], unpacked["id"])
-      end
-    end
-  end
-end
-
--- Validations
-assert(#KEYS >= 1)
-assert(#ARGV % 2 == 0)
-
--- Redis keys
-local data_tbl = KEYS[1]
-local info_tbl = data_tbl .. ":info"
-local index_base = data_tbl .. ":index:"
-
+local primary_key = "id"
 local auto_increment = "auto_increment"
 
--- Index count
-local index_columns = {}
-if #KEYS > 1 then
-  for i = 2, #KEYS do
-    index_columns[i - 1] = KEYS[i]
+local last_id = 0
+local need_update_auto_increment = false
+local packed_stack = {}
+
+local index_map = {}
+if #KEYS > 2 then
+  for i = 3, #KEYS do
+    local reversed = string.reverse(KEYS[i])
+    local pos = string.find(reversed, ":")
+    local name = string.reverse(string.sub(reversed, 1, pos - 1))
+    index_map[name] = {key = KEYS[i], new_ids = {}}
   end
 end
 
-local records = {}
-for i = 1, #ARGV, 2 do
-  local id = ARGV[i]
-  local data = ARGV[i + 1]
+local result = {}
+for i = 1, #ARGV do
+  local unpacked = cmsgpack.unpack(ARGV[i])
+  local id = tonumber(unpacked[primary_key]) or 0
 
-  if id == "auto" then -- with auto_increment id
-    id = redis.call("HINCRBY", info_tbl, auto_increment, 1)
-    local unpacked = cmsgpack.unpack(data)
-    unpacked["id"] = id
-    update_index(index_base, index_columns, unpacked)
-    data = cmsgpack.pack(unpacked)
+  if id == 0 then
+    id = tonumber(redis.call("hincrby", KEYS[2], auto_increment, 1))
+    unpacked[primary_key] = id
+    last_id = id
   else
-    local auto_id = redis.call("HGET", info_tbl, auto_increment)
-    local need_update_info = false
-
-    if auto_id then
-      if tonumber(id) > tonumber(auto_id) then
-        need_update_info = true
-      end
-    else
-      need_update_info = true
+    if last_id == 0 then
+      last_id = tonumber(redis.call("hget", KEYS[2], auto_increment))
     end
 
-    if need_update_info then
-      redis.call("HSET", info_tbl, auto_increment, id)
-    end
-
-    if #index_columns > 0 then
-      local unpacked = cmsgpack.unpack(data)
-      update_index(index_base, index_columns, unpacked)
+    if last_id == nil or id > last_id then
+      need_update_auto_increment = true
     end
   end
 
-  redis.call("HSET", data_tbl, id, data)
-  records[#records + 1] = data
+  for column, meta in pairs(index_map) do
+    if unpacked[column] then
+      local old_ids = redis.call("hget", meta.key, unpacked[column])
+
+      if old_ids then
+        local unpacked_ids = cmsgpack.unpack(old_ids)
+        local need_update_index = true
+
+        for i = 1, #unpacked_ids do
+          if unpacked_ids[i] == id then
+            need_update_index = false
+            break
+          end
+        end
+
+        if need_update_index then
+          table.insert(unpacked_ids, id)
+          table.insert(meta.new_ids, unpacked[column])
+          table.insert(meta.new_ids, cmsgpack.pack(unpacked_ids))
+        end
+      else
+        table.insert(meta.new_ids, unpacked[column])
+        table.insert(meta.new_ids, cmsgpack.pack({id}))
+      end
+    end
+  end
+
+  local repacked = cmsgpack.pack(unpacked)
+  table.insert(result, repacked)
+  table.insert(packed_stack, id)
+  table.insert(packed_stack, repacked)
 end
 
-return records
+-- commit records
+redis.call("hmset", KEYS[1], unpack(packed_stack))
+
+-- commit index
+for column, meta in pairs(index_map) do
+  redis.call("hmset", meta.key, unpack(meta.new_ids))
+end
+
+return result
