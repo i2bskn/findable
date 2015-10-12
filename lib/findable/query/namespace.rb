@@ -4,7 +4,6 @@ module Findable
       PREFIX = "findable"
       META_NAMES = %i(info lock thread)
       DELIMITER = ":"
-      AUTO_INCREMENT_KEY = :auto_increment # TODO: delete
 
       META_NAMES.each do |name|
         define_method([name, "key"].join("_")) { namespaces[name] }

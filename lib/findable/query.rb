@@ -29,62 +29,24 @@ module Findable
       deserialize(redis.hmget(data_key, *Array(ids)), model)
     end
 
-    def find_by_index(index, value)
-      if ids = ids_from_index([index, value].join(":"))
-        find_by_ids(ids)
-      end
-    end
-
     def exists?(id)
       redis.hexists(data_key, id)
     end
 
     def insert(object)
-      hashes = script_insert([object.attributes])
-      object.attributes.merge!(hashes.first)
+      att = script_insert(Array(object.attributes)).first
+      object.attributes.merge!(att)
       object
     end
 
-    def import(hashes)
-      lock do
-        indexes = Hash.new {|h, k| h[k] = [] }
-        values = hashes.each_with_object([]) do |hash, obj|
-          hash = hash.with_indifferent_access
-          hash["id"] = auto_incremented_id(hash["id"])
-          obj << hash["id"]
-          obj << hash.to_msgpack
-
-          if model.index_defined?
-            model.indexes.each_with_object([]) do |name, obj|
-              next if name == :id
-              indexes[[name, hash[name]].join(":")] << hash["id"]
-            end
-          end
-        end
-        redis.hmset(data_key, *values)
-        if indexes.present?
-          attrs = indexes.map {|k, v| [k, v.to_msgpack] }.flatten
-          redis.hmset(index_key, *attrs)
-        end
-      end
-    end
-
-    def delete(object)
-      if model.index_defined?
-        model.indexes.each do |name|
-          next if name == :id
-          if value = object.public_send("#{name}_was") || object.public_send(name)
-            redis.hdel(index_key, value)
-          end
-        end
-      end
-
-      redis.hdel(data_key, object.id)
+    def delete(objects)
+      delete_ids = Array(objects).map(&:id)
+      script_delete(delete_ids)
     end
 
     def delete_all
       redis.multi do
-        [data_key, info_key, index_key].each {|key| redis.del(key) }
+        eval_keys.each {|key| redis.del(key) }
       end
     end
 
@@ -93,60 +55,29 @@ module Findable
       Lock.new(lock_key, thread_key).lock { yield }
     end
 
-    def update_index(object)
-      if model.index_defined?
-        indexes = model.indexes.each_with_object([]) {|name, obj|
-          next if name == :id || object.public_send("#{name}_changed?")
+    # Lua Script API
 
-          if old_value = object.public_send("#{name}_was")
-            old_index_key = [name, old_value].join(":")
-
-            if (old_ids = ids_from_index(old_index_key)).present?
-              new_ids = old_ids.reject {|id| id == object.id }
-              if new_ids.empty?
-                redis.hdel(index_key, old_index_key)
-              else
-                obj << old_index_key
-                obj << new_ids.to_msgpack
-              end
-            end
-          end
-
-          obj << [name, object.public_send(name)].join(":")
-          obj << object.id
-        }
-        redis.hmset(index_key, *indexes)
-      end
-    end
-
-    # Script API
-    def script_insert(array_of_hashes)
-      eval_arguments = array_of_hashes.map(&:to_msgpack)
+    # Insert and update data of Findable.
+    #
+    # @param hashes [Array<Hash>] Attributes
+    # @return [Array<Hash>]
+    def script_insert(hashes)
+      eval_arguments = hashes.map(&:to_msgpack)
       RedisEval.insert.execute(eval_keys, eval_arguments).map {|packed|
         MessagePack.unpack(packed)
       }
     end
+    alias_method :import, :script_insert
+
+    # Delete data of Findable with index.
+    #
+    # @param ids [Array<Integer>] Delete target ids.
+    # @return [Integer] Deleted count.
+    def script_delete(ids)
+      RedisEval.delete.execute(eval_keys, Array(ids))
+    end
 
     private
-      def auto_incremented_id(id)
-        if id.present?
-          current = redis.hget(info_key, AUTO_INCREMENT_KEY).to_i
-          id = id.to_i
-          if id > current
-            redis.hset(info_key, AUTO_INCREMENT_KEY, id)
-          end
-          id
-        else
-          redis.hincrby(info_key, AUTO_INCREMENT_KEY, 1)
-        end
-      end
-
-      def ids_from_index(index_name)
-        if ids = redis.hget(index_key, index_name)
-          deserialize(ids)
-        end
-      end
-
       def eval_keys
         [
           data_key,
