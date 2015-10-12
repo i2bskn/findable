@@ -1,10 +1,14 @@
-require "json"
+require "pathname"
 require "bigdecimal"
 
 require "active_support"
 require "active_support/core_ext"
 require "active_model"
 require "redis"
+require "redis_eval"
+require "msgpack"
+
+RedisEval.config.script_paths = [File.expand_path("../findable/script", __FILE__)]
 
 require "findable/version"
 require "findable/errors"

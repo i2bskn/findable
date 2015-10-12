@@ -21,6 +21,10 @@ module Findable
         @_indexes ||= [:id]
       end
 
+      def secondary_indexes
+        indexes.select {|name| name != :id }
+      end
+
       def index_defined?
         indexes.size > 1
       end

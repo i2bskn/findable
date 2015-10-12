@@ -1,16 +1,21 @@
 module Findable
   class Query
     module Namespace
-      PREFIX = "findable".freeze
-      KEY_NAMES = %i(info data lock index).freeze
-      AUTO_INCREMENT_KEY = :auto_increment
+      PREFIX = "findable"
+      META_NAMES = %i(info lock thread)
+      DELIMITER = ":"
 
-      KEY_NAMES.each do |name|
+      META_NAMES.each do |name|
         define_method([name, "key"].join("_")) { namespaces[name] }
       end
 
-      def thread_key
-        [PREFIX, basename].join("_")
+      def data_key
+        @_data_key ||= [PREFIX, basename].join(DELIMITER)
+      end
+
+      def index_key(column)
+        @_index_base ||= [data_key, "index"].join(DELIMITER)
+        [@_index_base, column].join(DELIMITER)
       end
 
       private
@@ -20,8 +25,8 @@ module Findable
 
         # @return [Hash] namespaces
         def namespaces
-          @_namespaces ||= KEY_NAMES.each_with_object({}) {|key, obj|
-            obj[key] = [PREFIX, basename, key].join(":")
+          @_namespaces ||= META_NAMES.each_with_object({}) {|key, obj|
+            obj[key] = [data_key, key].join(DELIMITER)
           }
         end
     end

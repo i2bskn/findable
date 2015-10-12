@@ -14,8 +14,16 @@ describe Findable::Query::Namespace do
   let(:query) { QueryEx.new(model) }
 
   describe "Method definitions of various keys" do
+    subject { query }
+
     it {
-      namespace::KEY_NAMES.each do |name|
+      namespace::META_NAMES.each do |name|
+        is_expected.to respond_to("#{name}_key")
+      end
+    }
+
+    it {
+      namespace::META_NAMES.each do |name|
         expect(query.public_send("#{name}_key")).to be_kind_of(String)
         expect(query.public_send("#{name}_key")).to start_with(namespace::PREFIX)
       end
