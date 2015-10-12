@@ -1,7 +1,6 @@
 require "findable/query/connection"
 require "findable/query/namespace"
 require "findable/query/lock"
-require "findable/script"
 
 module Findable
   class Query
@@ -123,7 +122,7 @@ module Findable
     # Script API
     def script_insert(array_of_hashes)
       eval_arguments = array_of_hashes.map(&:to_msgpack)
-      Script.insert.execute(eval_keys, eval_arguments).map {|packed|
+      RedisEval.insert.execute(eval_keys, eval_arguments).map {|packed|
         MessagePack.unpack(packed)
       }
     end

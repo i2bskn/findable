@@ -23,64 +23,48 @@ assert(#ARGV > 0)
 local primary_key = "id"
 local auto_increment = "auto_increment"
 
-local last_id = 0
+local last_id = tonumber(redis.call("hget", KEYS[2], auto_increment)) or 0
 local need_update_auto_increment = false
-local packed_stack = {}
 
+-- for index calculation
 local index_map = {}
+local unpacked_stack = {}
+local insert_ids = {}
+local need_index_calculation = false
+
 if #KEYS > 2 then
+  need_index_calculation = true
+
   for i = 3, #KEYS do
     local reversed = string.reverse(KEYS[i])
     local pos = string.find(reversed, ":")
     local name = string.reverse(string.sub(reversed, 1, pos - 1))
-    index_map[name] = {key = KEYS[i], new_ids = {}}
+    index_map[name] = {key = KEYS[i], add_index_stack = {}}
   end
 end
 
-local result = {}
+local result = {} -- for return objects.
+local packed_stack = {} -- for data commit.
+
 for i = 1, #ARGV do
   local unpacked = cmsgpack.unpack(ARGV[i])
   local id = tonumber(unpacked[primary_key]) or 0
 
   if id == 0 then
-    id = tonumber(redis.call("hincrby", KEYS[2], auto_increment, 1))
+    id = last_id + 1
     unpacked[primary_key] = id
     last_id = id
+    need_update_auto_increment = true
   else
-    if last_id == 0 then
-      last_id = tonumber(redis.call("hget", KEYS[2], auto_increment))
-    end
-
-    if last_id == nil or id > last_id then
+    if id > last_id then
+      last_id = id
       need_update_auto_increment = true
     end
   end
 
-  for column, meta in pairs(index_map) do
-    if unpacked[column] then
-      local old_ids = redis.call("hget", meta.key, unpacked[column])
-
-      if old_ids then
-        local unpacked_ids = cmsgpack.unpack(old_ids)
-        local need_update_index = true
-
-        for i = 1, #unpacked_ids do
-          if unpacked_ids[i] == id then
-            need_update_index = false
-            break
-          end
-        end
-
-        if need_update_index then
-          table.insert(unpacked_ids, id)
-          table.insert(meta.new_ids, unpacked[column])
-          table.insert(meta.new_ids, cmsgpack.pack(unpacked_ids))
-        end
-      else
-        table.insert(meta.new_ids, unpacked[column])
-        table.insert(meta.new_ids, cmsgpack.pack({id}))
-      end
-    end
+  if need_index_calculation then
+    unpacked_stack[id] = unpacked
+    table.insert(insert_ids, id)
   end
 
   local repacked = cmsgpack.pack(unpacked)
@@ -89,12 +73,76 @@ for i = 1, #ARGV do
   table.insert(packed_stack, repacked)
 end
 
--- commit records
-redis.call("hmset", KEYS[1], unpack(packed_stack))
+if need_index_calculation then
+  local already_exists = redis.call("hmget", KEYS[1], unpack(insert_ids))
+  local old_unpacked_stack = {}
 
--- commit index
-for column, meta in pairs(index_map) do
-  redis.call("hmset", meta.key, unpack(meta.new_ids))
+  for i = 1, #already_exists do
+    if already_exists[i] then
+      local old_unpacked = cmsgpack.unpack(already_exists[i])
+      old_unpacked_stack[tonumber(old_unpacked[primary_key])] = old_unpacked
+    end
+  end
+
+  for id, unpacked in pairs(unpacked_stack) do
+    local old_unpacked = old_unpacked_stack[id] or {}
+
+    for column, meta in pairs(index_map) do
+      local old_value = old_unpacked[column]
+
+      -- deleting old index
+      if old_value and old_value ~= unpacked[column] then
+        local old_index = redis.call("hget", meta.key, old_value)
+
+        if old_index then
+          local old_unpacked_index = cmsgpack.unpack(old_index)
+
+          if #old_unpacked_index == 1 then
+            if old_unpacked_index[1] == id then
+              redis.call("hdel", meta.key, old_value)
+            end
+          else
+            local update_index = {}
+            for i = 1, #old_unpacked_index do
+              if old_unpacked_index[i] ~= id then
+                table.insert(update_index, old_unpacked_index[i])
+              end
+            end
+            redis.call("hset", meta.key, old_value, msgpack.pack(update_index))
+          end
+        end
+      end
+
+      -- update new index
+      if unpacked[column] then
+        local current_index = redis.call("hget", meta.key, unpacked[column])
+
+        if current_index then
+          local current_unpacked_index = cmsgpack.unpack(current_index)
+          local need_update_index = true
+
+          for i = 1, #current_unpacked_index do
+            if current_unpacked_index[i] == id then
+              need_update_index = false
+            end
+          end
+
+          if need_update_index then
+            table.insert(current_unpacked_index, id)
+            redis.call("hset", meta.key, unpacked[column], cmsgpack.pack(current_unpacked_index))
+          end
+        else
+          redis.call("hset", meta.key, unpacked[column], cmsgpack.pack({id}))
+        end
+      end
+    end
+  end
+end
+
+-- data commit
+redis.call("hmset", KEYS[1], unpack(packed_stack))
+if need_update_auto_increment then
+  redis.call("hset", KEYS[2], auto_increment, last_id)
 end
 
 return result
